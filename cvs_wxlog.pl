@@ -3,13 +3,13 @@
 use strict;
 
 use Getopt::Std;
+use CVS::Metrics;
+
 use File::Which;
 use Wx;
 
-use CVS::Metrics;
-
 my %opts;
-getopts('f:hst:DHS:', \%opts);
+getopts('f:hst:vDHS:', \%opts);
 
 if ($opts{h}) {
 	print "Usage: $0 [-h] [-f file.log] [-s] [-t title] [-D] [-H] [-S \"yyyy/mm/dd\"]\n";
@@ -17,9 +17,16 @@ if ($opts{h}) {
 	print "\t-f file.log : off-line mode\n";
 	print "\t-s : use an extern style sheet\n";
 	print "\t-t title\n";
+	print "\t-v : version\n";
 	print "\t-D : suppress 'dead' files in tree\n";
 	print "\t-H : append HEAD as a tag\n";
 	print "\t-S start_date : yyyy/mm/dd \n";
+	exit(0);
+}
+
+if ($opts{v}) {
+	print "$0\n";
+	print "CVS::Metrics Version $CVS::Metrics::VERSION\n";
 	exit(0);
 }
 
@@ -156,14 +163,18 @@ if ($parser) {
 	our $cvs_log = $parser->parse($cvs_logfile);
 
 	our @tags;
-	my @tagname = $cvs_log->getTagname();
-	foreach my $tag (sort @tagname) {
+	my $timed = $cvs_log->getTimedTag();
+	my %matched;
+	while (my ($tag, $date) = each %{$timed}) {
 		print "Tag: ", $tag;
 		if ($tag =~ /$regex_tag/) {
-			push @tags, $tag;
+			$matched{$date} = $tag;
 			print " ... matched";
 		}
 		print "\n";
+	}
+	foreach (sort keys %matched) {
+		push @tags, $matched{$_};
 	}
 
 	if ($flg_head) {
@@ -185,7 +196,12 @@ sub FindCvs {
 		$cvs = $cvs_setting->{'/P_WhichCvs'};
 		if (defined $cvs) {
 			$cvs =~ s/[\000\001]//g;
-			$cvs =~ s/wincvs\.exe\@$/cvs.exe/;
+			$cvs =~ s/wincvs\.exe\@$//;
+			if ( -e "${cvs}CVSNT\\\\cvs.exe") {
+				$cvs .= "CVSNT\\\\cvs.exe";
+			} else {
+				$cvs .= "cvs.exe";
+			}
 		}
 	}
 
@@ -563,8 +579,16 @@ sub OnAudit {
 	my ($self, $event) = @_;
 	my $model = $self->{model};
 
-	if (        $model->{tag_to} ne 'HEAD'
-			and $model->{tag_from} ge $model->{tag_to} ) {
+	my @tags = @{$model->{tags}};
+	while ($model->{tag_from} ne $tags[0]) {
+		shift @tags;
+	}
+	shift @tags;
+	my $found = 0;
+	foreach (@tags) {
+		$found = 1 if ($_ eq $model->{tag_to});
+	}
+	unless ($found) {
 		my $msg = new Wx::MessageDialog($self, "$model->{tag_from} >= $model->{tag_to}",
 				"CVS log", wxICON_ERROR|wxOK, wxDefaultPosition);
 		$msg->ShowModal();

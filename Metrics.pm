@@ -3,7 +3,7 @@ use strict;
 package CVS::Metrics;
 
 use vars qw($VERSION);
-$VERSION = '0.03';
+$VERSION = '0.04';
 
 use File::Basename;
 use POSIX qw(mktime);
@@ -134,7 +134,7 @@ sub EnergyGD {
 		my @tags2 = @{$tags};
 		my @data_pre;
 		my @tags_pre;
-		while ($tags2[0] lt $tag_from) {
+		while ($tags2[0] ne $tag_from) {
 			push @tags_pre, shift @tags2;
 			push @data_pre, shift @{$data};
 			push @data_pre, shift @{$data};
@@ -153,7 +153,7 @@ sub EnergyGD {
 				unshift @data_post, pop @{$data};
 				unshift @data_post, pop @{$data};
 			}
-			while ($tags2[-1] gt $tag_to) {
+			while ($tags2[-1] ne $tag_to) {
 				unshift @tags_post, pop @tags2;
 				unshift @data_post, pop @{$data};
 				unshift @data_post, pop @{$data};

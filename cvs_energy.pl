@@ -9,7 +9,7 @@ use HTML::Template;
 use CVS::Metrics;
 
 my %opts;
-getopts('d:f:ht:H', \%opts);
+getopts('d:f:ht:vH', \%opts);
 
 if ($opts{h}) {
 	print "Usage: $0 [-h] [-f file.log] [-t title] [-H] [-d \"dirs ...\"]\n";
@@ -17,7 +17,14 @@ if ($opts{h}) {
 	print "\t-d \"dirs ...\" : list of directories\n";
 	print "\t-f file.log : off-line mode\n";
 	print "\t-t title\n";
+	print "\t-v : version\n";
 	print "\t-H : append HEAD as a tag\n";
+	exit(0);
+}
+
+if ($opts{v}) {
+	print "$0\n";
+	print "CVS::Metrics Version $CVS::Metrics::VERSION\n";
 	exit(0);
 }
 
@@ -126,14 +133,18 @@ if ($parser) {
 	my $cvs_log = $parser->parse($cvs_logfile);
 
 	my @tags;
-	my @tagname = $cvs_log->getTagname();
-	foreach my $tag (sort @tagname) {
+	my $timed = $cvs_log->getTimedTag();
+	my %matched;
+	while (my ($tag, $date) = each %{$timed}) {
 		print "Tag: ", $tag;
 		if ($tag =~ /$regex_tag/) {
-			push @tags, $tag;
+			$matched{$date} = $tag;
 			print " ... matched";
 		}
 		print "\n";
+	}
+	foreach (sort keys %matched) {
+		push @tags, $matched{$_};
 	}
 
 	if ($flg_head) {
@@ -159,7 +170,12 @@ sub FindCvs {
 		$cvs = $cvs_setting->{'/P_WhichCvs'};
 		if (defined $cvs) {
 			$cvs =~ s/[\000\001]//g;
-			$cvs =~ s/wincvs\.exe\@$/cvs.exe/;
+			$cvs =~ s/wincvs\.exe\@$//;
+			if ( -e "${cvs}CVSNT\\\\cvs.exe") {
+				$cvs .= "CVSNT\\\\cvs.exe";
+			} else {
+				$cvs .= "cvs.exe";
+			}
 		}
 	}
 

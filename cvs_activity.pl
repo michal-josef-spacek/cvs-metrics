@@ -9,7 +9,7 @@ use HTML::Template;
 use CVS::Metrics;
 
 my %opts;
-getopts('d:f:ht:HS:', \%opts);
+getopts('d:f:ht:vHS:', \%opts);
 
 if ($opts{h}) {
 	print "Usage: $0 [-h] [-f file.log] [-t title] [-d \"dirs ...\"] [-S \"yyyy/mm/dd\"]\n";
@@ -17,7 +17,14 @@ if ($opts{h}) {
 	print "\t-d \"dirs ...\" : list of directories\n";
 	print "\t-f file.log : off-line mode\n";
 	print "\t-t title\n";
+	print "\t-v : version\n";
 	print "\t-S start_date : yyyy/mm/dd \n";
+	exit(0);
+}
+
+if ($opts{v}) {
+	print "$0\n";
+	print "CVS::Metrics Version $CVS::Metrics::VERSION\n";
 	exit(0);
 }
 
@@ -141,7 +148,12 @@ sub FindCvs {
 		$cvs = $cvs_setting->{'/P_WhichCvs'};
 		if (defined $cvs) {
 			$cvs =~ s/[\000\001]//g;
-			$cvs =~ s/wincvs\.exe\@$/cvs.exe/;
+			$cvs =~ s/wincvs\.exe\@$//;
+			if ( -e "${cvs}CVSNT\\\\cvs.exe") {
+				$cvs .= "CVSNT\\\\cvs.exe";
+			} else {
+				$cvs .= "cvs.exe";
+			}
 		}
 	}
 

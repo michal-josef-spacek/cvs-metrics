@@ -1,5 +1,10 @@
 Revision history for Perl extension CVS::Metrics.
 
+0.04  Fri Oct 31 12:30:00
+	- add option -v : version
+	- on Win32 look for cvs.exe in CVSNT
+	- tags sorted by date (previously by name)
+
 0.03  Mon Aug 18 18:30:00
 	- add cvs_wxlog.pl (uses wxWindows)
 
