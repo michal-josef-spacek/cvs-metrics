@@ -1,5 +1,8 @@
 Revision history for Perl extension CVS::Metrics.
 
+0.06  Wed Feb 18 12:30:00 2004
+	- cvs_current generates current.html as summary
+
 0.05  Tue Feb 17 12:30:00 2004
 	- add a new script : cvs_current
 	- cvs_wxlog uses Wx::Html on non-Win32

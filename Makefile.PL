@@ -7,6 +7,7 @@ WriteMakefile(
     'ABSTRACT'      => 'Utilities for process cvs log',
     'PREREQ_PM'     => {
                         'Chart::Plot::Canvas'   => 0,
+                        'HTML::Template'        => 0,
                         'GD'                    => 0,
                         'GD::Graph'             => 0,
                         'Parse::RecDescent'     => 0,
