@@ -1,5 +1,8 @@
 Revision history for Perl extension CVS::Metrics.
 
+0.07  Thu Mar 25 12:30:00 2004
+	- add a production 'imported' in grammar
+
 0.06  Wed Feb 18 12:30:00 2004
 	- cvs_current generates current.html as summary
 

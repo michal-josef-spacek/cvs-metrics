@@ -3,7 +3,7 @@ use strict;
 package CVS::Metrics;
 
 use vars qw($VERSION);
-$VERSION = '0.06';
+$VERSION = '0.07';
 
 use File::Basename;
 use POSIX qw(mktime);
@@ -640,17 +640,19 @@ sub new {
 		selected: 'selected revisions:'  /[0-9]+/ EOL
 				{ $item[2]; }
 
-		Description: 'description:' EOL Revision(s)
+		Description: 'description:' EOL imported(?) Revision(s)
 				{
 					my @list;
-					foreach (@{$item[3]}) {
+					foreach (@{$item[4]}) {
 						push @list, @{$_};
 					}
 					my %hash = @list;
 					\%hash;
 				}
 
-		Revision: /[-]+\n/ id date author state line(?) EOL message(s)
+		imported: 'Imported' /(.*)/ EOL
+
+		Revision: /[-]+\n/ id date author state line(?) EOL message(s?)
 				{
 					[
 						$item[2],
@@ -699,6 +701,7 @@ sub parse {
 
 	%cvs_log = ();
 	$Parse::RecDescent::skip = '[ \t]*';
+#	$::RD_TRACE = 1;
 	my $text;
 	open IN, $cvs_logfile
 			or die "can't open CVS output ($!).\n";
