@@ -3,7 +3,7 @@ use strict;
 package CVS::Metrics;
 
 use vars qw($VERSION);
-$VERSION = '0.04';
+$VERSION = '0.05';
 
 use File::Basename;
 use POSIX qw(mktime);
@@ -52,6 +52,7 @@ sub getTimedTag {
 				}
 			} else {
 				$timed{$tag} = $date;
+#				print LOG "$tag $filename $date\n";
 			}
 		}
 	}
@@ -404,7 +405,8 @@ sub ActivityGD {
 		$sum += $_;
 		$nb ++;
 	}
-	my $average = $sum / $nb;
+	my $average = 1;
+	$average = $sum / $nb if ($sum and $nb);
 
 	my $range_day = 30;
 	while ((scalar(@{$days}) % $range_day) != 1) {
@@ -730,11 +732,11 @@ CVS::Metrics - Utilities for process B<cvs log>
 
 =head1 SEE ALSO
 
-L<cvs_activity.pl>, L<cvs_energy.pl>, L<cvs_tklog.pl>
+L<cvs_activity.pl>, L<cvs_energy.pl>, L<cvs_tklog.pl>, L<cvs_wxlog.pl>, L<cvs_current.pl>
 
 =head1 COPYRIGHT
 
-(c) 2003 Francois PERRAD, France. All rights reserved.
+(c) 2003-2004 Francois PERRAD, France. All rights reserved.
 
 This library is distributed under the terms of the Artistic Licence.
 

@@ -5,21 +5,15 @@ use strict;
 use Getopt::Std;
 use File::Which;
 use HTML::Template;
+use Pod::Usage;
 
 use CVS::Metrics;
 
 my %opts;
-getopts('d:f:ht:vHS:', \%opts);
+getopts('bd:f:ht:vHS:', \%opts);
 
 if ($opts{h}) {
-	print "Usage: $0 [-h] [-f file.log] [-t title] [-d \"dirs ...\"] [-S \"yyyy/mm/dd\"]\n";
-	print "\t-h : help\n";
-	print "\t-d \"dirs ...\" : list of directories\n";
-	print "\t-f file.log : off-line mode\n";
-	print "\t-t title\n";
-	print "\t-v : version\n";
-	print "\t-S start_date : yyyy/mm/dd \n";
-	exit(0);
+	pod2usage(-verbose => 1);
 }
 
 if ($opts{v}) {
@@ -64,17 +58,17 @@ if ($opts{S}) {
 
 cvs_activity - Extract metrics from cvs log
 
-=head1 SYNOPSYS
+=head1 SYNOPSIS
 
-cvs_activity [B<-h>] [B<-f> I<file.log>] [B<-t> I<title>] [B<-d> "I<dirs> ..."] [B<-S> I<yyyy/mm/dd>]
+cvs_activity [B<-f> I<file.log>] [B<-t> I<title>] [B<-d> "I<dirs> ..."] [B<-S> I<yyyy/mm/dd>]
 
 =head1 OPTIONS
 
 =over 8
 
-=item -h
+=item -b
 
-Display Usage.
+At the end, start a Browser.
 
 =item -d
 
@@ -84,9 +78,17 @@ List of directories.
 
 Mode off-line.
 
+=item -h
+
+Display Usage.
+
 =item -t
 
 Specify the main title.
+
+=item -v
+
+Display Version.
 
 =item -S
 
@@ -118,7 +120,13 @@ in the current directory. The file could contains the following variables :
 
 =head1 SEE ALSO
 
-cvs_tklog, cvs_energy
+cvs_energy, cvs_tklog, cvs_wxlog, cvs_current
+
+=head1 COPYRIGHT
+
+(c) 2003-2004 Francois PERRAD, France. All rights reserved.
+
+This library is distributed under the terms of the Artistic Licence.
 
 =head1 AUTHOR
 
@@ -132,8 +140,10 @@ if ($parser) {
 
 	GeneratePNG($cvs_log, $title, @dirs);
 	GenerateHTML($title, @dirs);
-	print "Starting browser...";
-	exec "a_${title}.html";
+	if ($opts{b}) {
+		print "Starting browser...";
+		exec "a_${title}.html";
+	}
 }
 
 #######################################################################
@@ -142,9 +152,9 @@ sub FindCvs {
 	my $cvs = which('cvs');
 
 	if ( !defined $cvs and $^O eq 'MSWin32' ) {
-		use Win32::TieRegistry(Delimiter => "/");
-
-		my $cvs_setting = $Registry->{"HKEY_CURRENT_USER/Software/WinCvs/wincvs/CVS settings"};
+		my $cvs_setting;
+		eval 'use Win32::TieRegistry(Delimiter => "/")';
+		eval '$cvs_setting = $Registry->{"HKEY_CURRENT_USER/Software/WinCvs/wincvs/CVS settings"}';
 		$cvs = $cvs_setting->{'/P_WhichCvs'};
 		if (defined $cvs) {
 			$cvs =~ s/[\000\001]//g;

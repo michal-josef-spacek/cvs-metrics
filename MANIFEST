@@ -6,5 +6,6 @@ cvs_activity.pl
 cvs_energy.pl
 cvs_tklog.pl
 cvs_wxlog.pl
+cvs_current.pl
 README
 test.pl

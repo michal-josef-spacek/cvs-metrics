@@ -1,13 +1,14 @@
-CVS/Metrics version 0.03
+CVS/Metrics version 0.05
 ========================
 
     CVS::Metrics - Utilities for process cvs log
 
-    This module supplies 4 utilities :
+    This module supplies 5 utilities :
       - cvs_activity.pl
       - cvs_energy.pl
       - cvs_tklog.pl (Tk)
       - cvs_wxlog.pl (wxWindows)
+      - cvs_current.pl
 
 INSTALLATION
 
@@ -24,13 +25,9 @@ This module requires these other modules and libraries:
 
   GD, GD::Graph, Parse::RecDescent, Chart::Plot::Canvas
 
-TODO
-
-    Ports on *nix
-
 COPYRIGHT AND LICENCE
 
-  (c) 2003 Francois PERRAD, France. All rights reserved.
+  (c) 2003-2004 Francois PERRAD, France. All rights reserved.
 
   This library is distributed under the terms of the Artistic Licence.
 

@@ -2,26 +2,19 @@
 
 use strict;
 
+use File::Which;
 use Getopt::Std;
+use Pod::Usage;
+
 use CVS::Metrics;
 
-use File::Which;
 use Wx;
 
 my %opts;
 getopts('f:hst:vDHS:', \%opts);
 
 if ($opts{h}) {
-	print "Usage: $0 [-h] [-f file.log] [-s] [-t title] [-D] [-H] [-S \"yyyy/mm/dd\"]\n";
-	print "\t-h : help\n";
-	print "\t-f file.log : off-line mode\n";
-	print "\t-s : use an extern style sheet\n";
-	print "\t-t title\n";
-	print "\t-v : version\n";
-	print "\t-D : suppress 'dead' files in tree\n";
-	print "\t-H : append HEAD as a tag\n";
-	print "\t-S start_date : yyyy/mm/dd \n";
-	exit(0);
+	pod2usage(-verbose => 1);
 }
 
 if ($opts{v}) {
@@ -75,31 +68,35 @@ if ($opts{S}) {
 
 =head1 NAME
 
-cvs_tklog - Extract from cvs log
+cvs_wxlog - Extract from cvs log
 
-=head1 SYNOPSYS
+=head1 SYNOPSIS
 
-cvs_tklog [B<-h>] [B<-f> I<file.log>] [B<-t> I<title>] [B<-s>] [B<-D>] [B<-H>] [B<-S> I<yyyy/mm/dd>]
+cvs_wxlog [B<-f> I<file.log>] [B<-t> I<title>] [B<-s>] [B<-D>] [B<-H>] [B<-S> I<yyyy/mm/dd>]
 
 =head1 OPTIONS
 
 =over 8
 
-=item -h
-
-Display Usage.
-
 =item -f
 
 Mode off-line.
 
+=item -h
+
+Display Usage.
+
 =item -s
 
-use an extern style sheet (cvs_tklog.css).
+use an extern style sheet (cvs_wxlog.css).
 
 =item -t
 
 Specify the main title.
+
+=item -v
+
+Display Version.
 
 =item -D
 
@@ -130,8 +127,8 @@ Each report is composed of three parts :
 - an detailed report : all informations about CVS commit, sorted first by directory,
 after grouped by message and sorted by date.
 
-This tool needs Wx, Wx::ActiveX, File::Which, GD, Chart::Plot::Canvas,
-HTML::Template and Parse::RecDescent modules.
+This tool needs Wx, Wx::ActiveX (on Win32 platform), File::Which, GD,
+Chart::Plot::Canvas, HTML::Template and Parse::RecDescent modules.
 
 =head2 Configuration file (.cvs_metrics)
 
@@ -146,11 +143,17 @@ in the current directory. The file could contains the following variables :
 
  $flg_dead = 1;		# or 0
 
- $start_date = "2002/01/01";
+ $start_date = "2003/01/01";
 
 =head1 SEE ALSO
 
-cvs_activity, cvs_energy, cvs_tklog
+cvs_activity, cvs_energy, cvs_tklog, cvs_current
+
+=head1 COPYRIGHT
+
+(c) 2003-2004 Francois PERRAD, France. All rights reserved.
+
+This library is distributed under the terms of the Artistic Licence.
 
 =head1 AUTHOR
 
@@ -190,9 +193,9 @@ sub FindCvs {
 	my $cvs = which('cvs');
 
 	if ( !defined $cvs and $^O eq 'MSWin32' ) {
-		use Win32::TieRegistry(Delimiter => "/");
-
-		my $cvs_setting = $Registry->{"HKEY_CURRENT_USER/Software/WinCvs/wincvs/CVS settings"};
+		my $cvs_setting;
+		eval 'use Win32::TieRegistry(Delimiter => "/")';
+		eval '$cvs_setting = $Registry->{"HKEY_CURRENT_USER/Software/WinCvs/wincvs/CVS settings"}';
 		$cvs = $cvs_setting->{'/P_WhichCvs'};
 		if (defined $cvs) {
 			$cvs =~ s/[\000\001]//g;
@@ -218,7 +221,6 @@ package MyIEFrame;
 use strict;
 use base qw(Wx::Frame);
 
-use Wx::ActiveX::IE;
 use Wx qw(:sizer);
 use Wx qw(wxDefaultPosition wxDefaultSize);
 
@@ -230,11 +232,43 @@ sub new {
 			wxDefaultPosition, wxDefaultSize);
 	$self->SetIcon(Wx::GetWxPerlIcon());
 
-	my $IE = Wx::ActiveX::IE->new( $self , -1 , wxDefaultPosition , wxDefaultSize );
+	eval 'use Wx::ActiveX::IE';
+	my $IE = new Wx::ActiveX::IE($self, -1, wxDefaultPosition, wxDefaultSize);
 	$IE->LoadUrl($url);
 
 	my $top_s = new Wx::BoxSizer(wxVERTICAL);
 	$top_s->Add($IE, 1, wxGROW|wxALL, 0);
+
+	$self->SetSizer($top_s);
+	$self->SetAutoLayout(1);
+
+	return $self;
+}
+
+#######################################################################
+
+package MyHtmlFrame;
+
+use strict;
+use base qw(Wx::Frame);
+
+use Wx::Html;
+use Wx qw(:sizer);
+use Wx qw(wxDefaultPosition wxDefaultSize);
+
+sub new {
+	my $class = shift;
+	my ($title, $file) = @_;
+
+	my $self = $class->SUPER::new(undef, -1, $title,
+			wxDefaultPosition, wxDefaultSize);
+	$self->SetIcon(Wx::GetWxPerlIcon());
+
+	my $BROWSER = new Wx::HtmlWindow($self, -1, wxDefaultPosition, wxDefaultSize);
+	$BROWSER->LoadPage($file);
+
+	my $top_s = new Wx::BoxSizer(wxVERTICAL);
+	$top_s->Add($BROWSER, 1, wxGROW|wxALL, 0);
 
 	$self->SetSizer($top_s);
 	$self->SetAutoLayout(1);
@@ -596,13 +630,16 @@ sub OnAudit {
 	}
 
 	my $html = $model->GenerateHTML();
+	my $title = $html;
+	$title =~ s/\.\w+$//;
 	if (Wx::wxMSW()) {
 		use Cwd;
-		my $title = $html;
-		$title =~ s/\.\w+$//;
 		my $url = "file://" . cwd() . "/" . $html;
 		my $ie = new MyIEFrame($title, $url);
 		$ie->Show(1);
+	} else {
+		my $browser = new MyHtmlFrame($title, $html);
+		$browser->Show(1);
 	}
 }
 
@@ -653,9 +690,9 @@ my $html = q{
     <meta http-equiv='Content-Type' content='text/html; charset=ISO-8859-1' />
     <meta name='generator' content='<TMPL_VAR NAME=generator>' />
     <meta name='date' content='<TMPL_VAR NAME=date>' />
-    <title>cvs_tklog <!-- TMPL_VAR NAME=title --></title>
+    <title>cvs_wxlog <!-- TMPL_VAR NAME=title --></title>
     <!-- TMPL_IF NAME=css -->
-    <link href='cvs_tklog.css' rel='stylesheet' type='text/css'/>
+    <link href='cvs_wxlog.css' rel='stylesheet' type='text/css'/>
     <!-- TMPL_ELSE -->
     <style type='text/css'>
       <!-- TMPL_VAR NAME=style -->
@@ -736,7 +773,7 @@ my $html = q{
   <!-- /TMPL_LOOP -->
   </table>
   <hr />
-  <cite>Generated by cvs_tklog (<!-- TMPL_VAR NAME=date -->)</cite>
+  <cite>Generated by cvs_wxlog (<!-- TMPL_VAR NAME=date -->)</cite>
   </body>
 </html>
 };
@@ -767,7 +804,7 @@ my $style = q{
 			unless (defined $template);
 
 	my $now = localtime();
-	my $generator = "cvs_tklog " . $CVS::Metrics::VERSION . " (Perl " . $] . ")";
+	my $generator = "cvs_wxlog " . $CVS::Metrics::VERSION . " (Perl " . $] . ")";
 	my $dir = $self->{path} eq "." ? "all" : $self->{path};
 	my $title_full = "$self->{title}_${dir}_$self->{tag_from}_to_$self->{tag_to}";
 	$title_full =~ s/\//_/g;
@@ -776,11 +813,13 @@ my $style = q{
 
 	my $e_img = "e_${title_full}.png";
 	$e_img =~ s/\//_/g;
-	open OUT, "> $e_img"
-			or die "can't open $e_img ($!).\n";
-	binmode OUT, ":raw";
-	print OUT $image->png();
-	close OUT;
+	if (defined $image) {
+		open OUT, "> $e_img"
+				or die "can't open $e_img ($!).\n";
+		binmode OUT, ":raw";
+		print OUT $image->png();
+		close OUT;
+	}
 
 	my $timed_tag = $self->{cvs_log}->getTimedTag();
 	my @timed_tag = ();
@@ -804,11 +843,13 @@ my $style = q{
 
 	my $a_img = "a_${title_full}.png";
 	$a_img =~ s/\//_/g;
-	open OUT, "> $a_img"
-			or die "can't open $a_img ($!).\n";
-	binmode OUT, ":raw";
-	print OUT $image->png();
-	close OUT;
+	if (defined $image) {
+		open OUT, "> $a_img"
+				or die "can't open $a_img ($!).\n";
+		binmode OUT, ":raw";
+		print OUT $image->png();
+		close OUT;
+	}
 
 	my $dir_evol = $self->{cvs_log}->getDirEvolution($self->{path}, $self->{tag_from}, $self->{tag_to});
 	my @summary = ();
@@ -907,7 +948,7 @@ my $style = q{
 	close OUT;
 
 	if ($flg_css) {
-		my $stylesheet = "cvs_tklog.css";
+		my $stylesheet = "cvs_wxlog.css";
 		unless (-e $stylesheet) {
 			open OUT, "> $stylesheet"
 					or die "can't open $stylesheet ($!)\n";
@@ -944,8 +985,4 @@ sub OnInit {
 
 	return 1;
 }
-
-
-
-
 

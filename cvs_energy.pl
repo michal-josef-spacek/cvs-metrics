@@ -5,21 +5,15 @@ use strict;
 use Getopt::Std;
 use File::Which;
 use HTML::Template;
+use Pod::Usage;
 
 use CVS::Metrics;
 
 my %opts;
-getopts('d:f:ht:vH', \%opts);
+getopts('bd:f:ht:vH', \%opts);
 
 if ($opts{h}) {
-	print "Usage: $0 [-h] [-f file.log] [-t title] [-H] [-d \"dirs ...\"]\n";
-	print "\t-h : help\n";
-	print "\t-d \"dirs ...\" : list of directories\n";
-	print "\t-f file.log : off-line mode\n";
-	print "\t-t title\n";
-	print "\t-v : version\n";
-	print "\t-H : append HEAD as a tag\n";
-	exit(0);
+	pod2usage(-verbose => 1);
 }
 
 if ($opts{v}) {
@@ -66,17 +60,17 @@ unless (defined $regex_tag) {
 
 cvs_energy - Extract metrics from cvs log
 
-=head1 SYNOPSYS
+=head1 SYNOPSIS
 
-cvs_energy [B<-h>] [B<-f> I<file.log>] [B<-t> I<title>] [B<-H>] [B<-d> "I<dirs> ..."]
+cvs_energy [B<-f> I<file.log>] [B<-t> I<title>] [B<-H>] [B<-d> "I<dirs> ..."]
 
 =head1 OPTIONS
 
 =over 8
 
-=item -h
+=item -b
 
-Display Usage.
+At the end, start a Browser.
 
 =item -d
 
@@ -86,9 +80,17 @@ List of directories.
 
 Mode off-line.
 
+=item -h
+
+Display Usage.
+
 =item -t
 
 Specify the main title.
+
+=item -v
+
+Display Version.
 
 =item -H
 
@@ -120,7 +122,13 @@ in the current directory. The file could contains the following variables :
 
 =head1 SEE ALSO
 
-cvs_tklog, cvs_activity
+cvs_activity, cvs_tklog, cvs_wxlog, cvs_current
+
+=head1 COPYRIGHT
+
+(c) 2003-2004 Francois PERRAD, France. All rights reserved.
+
+This library is distributed under the terms of the Artistic Licence.
 
 =head1 AUTHOR
 
@@ -154,8 +162,10 @@ if ($parser) {
 
 	GeneratePNG($cvs_log, \@tags, $title, @dirs);
 	GenerateHTML($title, @dirs);
-	print "Starting browser...";
-	exec "e_${title}.html";
+	if ($opts{b}) {
+		print "Starting browser...";
+		exec "e_${title}.html";
+	}
 }
 
 #######################################################################
@@ -164,9 +174,9 @@ sub FindCvs {
 	my $cvs = which('cvs');
 
 	if ( !defined $cvs and $^O eq 'MSWin32' ) {
-		use Win32::TieRegistry(Delimiter => "/");
-
-		my $cvs_setting = $Registry->{"HKEY_CURRENT_USER/Software/WinCvs/wincvs/CVS settings"};
+		my $cvs_setting;
+		eval 'use Win32::TieRegistry(Delimiter => "/")';
+		eval '$cvs_setting = $Registry->{"HKEY_CURRENT_USER/Software/WinCvs/wincvs/CVS settings"}';
 		$cvs = $cvs_setting->{'/P_WhichCvs'};
 		if (defined $cvs) {
 			$cvs =~ s/[\000\001]//g;
@@ -192,24 +202,28 @@ sub GeneratePNG {
 
 	my $img = $cvs_log->EnergyGD($tags, ".", $title, 600, 400);
 
-	my $outfile = "e_${title}.png";
-	$outfile =~ s/\//_/g;
-	open OUT, "> $outfile"
-			or die "can't open $outfile ($!).\n";
-	binmode OUT, ":raw";
-	print OUT $img->png();
-	close OUT;
-
-	for my $dir (@dirs) {
-		$img = $cvs_log->EnergyGD($tags, $dir, $dir, 600, 400);
-
-		$outfile = "e_${title}_${dir}.png";
+	if (defined $img) {
+		my $outfile = "e_${title}.png";
 		$outfile =~ s/\//_/g;
 		open OUT, "> $outfile"
 				or die "can't open $outfile ($!).\n";
 		binmode OUT, ":raw";
 		print OUT $img->png();
 		close OUT;
+	}
+
+	for my $dir (@dirs) {
+		$img = $cvs_log->EnergyGD($tags, $dir, $dir, 600, 400);
+
+		if (defined $img) {
+			my $outfile = "e_${title}_${dir}.png";
+			$outfile =~ s/\//_/g;
+			open OUT, "> $outfile"
+					or die "can't open $outfile ($!).\n";
+			binmode OUT, ":raw";
+			print OUT $img->png();
+			close OUT;
+		}
 	}
 }
 

@@ -19,6 +19,7 @@ WriteMakefile(
                         'cvs_energy.pl',
                         'cvs_tklog.pl',
                         'cvs_wxlog.pl',
+                        'cvs_current.pl',
     ],
     'AUTHOR'        => "Francois PERRAD (francois.perrad\@gadz.org)",
     'dist'          => {
