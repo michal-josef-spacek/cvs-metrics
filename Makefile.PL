@@ -13,7 +13,10 @@ WriteMakefile(
                         'Parse::RecDescent'     => 0,
     },
     'PM'            => {
-                        'Metrics.pm'    => '$(INST_LIBDIR)/Metrics.pm',
+                        'Metrics.pm'        => '$(INST_LIBDIR)/Metrics.pm',
+                        'Parser.pm'         => '$(INST_LIBDIR)/Metrics/Parser.pm',
+                        'Graph.pm'          => '$(INST_LIBDIR)/Metrics/Graph.pm',
+                        'TaggedChart.pm'    => '$(INST_LIBDIR)/Metrics/TaggedChart.pm',
     },
     'EXE_FILES'     => [
                         'cvs_activity.pl',

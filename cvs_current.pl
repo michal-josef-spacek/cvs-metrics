@@ -10,6 +10,7 @@ use HTML::Template;
 use Pod::Usage;
 
 use CVS::Metrics;
+use CVS::Metrics::Graph;
 
 my %opts;
 getopts('d:f:ho:st:vS:', \%opts);
@@ -290,6 +291,12 @@ my $html = q{
       <td><!-- TMPL_VAR NAME=deleted --></td>
     </tr>
   <!-- /TMPL_LOOP -->
+    <tr class='total'>
+      <td>TOTAL</td>
+      <td><!-- TMPL_VAR NAME=total_added --></td>
+      <td><!-- TMPL_VAR NAME=total_modified --></td>
+      <td><!-- TMPL_VAR NAME=total_deleted --></td>
+    </tr>
   </table>
   <hr />
   <h2>Detailed Evolution Report</h2>
@@ -333,6 +340,7 @@ my $style = q{
       h1    { text-align: center }
       h2    { color: red }
       td a  { font-weight: bold }
+      tr.total      { font-weight: bold }
       table.layout  { background-color: #FFFFCC }
       span.author   { font-weight: bold }
       span.filename { color: blue }
@@ -402,6 +410,9 @@ my $style = q{
 
 	my $dir_evol = $cvs_log->getDirEvolution($path, $tag_from, $tag_to);
 	my @summary = ();
+	my $total_added = 0; 
+	my $total_modified = 0; 
+	my $total_deleted = 0; 
 	foreach my $dirname (sort keys %{$dir_evol}) {
 		my @val = @{$dir_evol->{$dirname}};
 		next unless ($val[0] or $val[1] or $val[2]);
@@ -411,6 +422,9 @@ my $style = q{
 			modified	=> $val[1],
 			deleted		=> $val[2],
 		};
+		$total_added += $val[0]; 
+		$total_modified += $val[1]; 
+		$total_deleted += $val[2]; 
 	}
 
 	my $evol = $cvs_log->getEvolution($path, $tag_from, $tag_to);
@@ -477,16 +491,19 @@ my $style = q{
 	}
 
 	$template->param(
-			css			=> $flg_css,
-			style		=> $style,
-			generator	=> $generator,
-			date		=> $now,
-			title		=> $title_full,
-			e_img		=> $e_img,
-			a_img		=> $a_img,
-			timed_tag	=> \@timed_tag,
-			summary		=> \@summary,
-			dirs		=> \@dirs,
+			css				=> $flg_css,
+			style			=> $style,
+			generator		=> $generator,
+			date			=> $now,
+			title			=> $title_full,
+			e_img			=> $e_img,
+			a_img			=> $a_img,
+			timed_tag		=> \@timed_tag,
+			summary			=> \@summary,
+			total_added		=> $total_added, 
+			total_modified	=> $total_modified, 
+			total_deleted	=> $total_deleted, 
+			dirs			=> \@dirs,
 	);
 
 	my $basename = "${title_full}.html";

@@ -9,6 +9,7 @@ use HTML::Template;
 use Pod::Usage;
 
 use CVS::Metrics;
+use CVS::Metrics::Graph;
 
 my %opts;
 getopts('bd:f:ho:t:vH', \%opts);

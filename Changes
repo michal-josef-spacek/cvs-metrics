@@ -1,5 +1,8 @@
 Revision history for Perl extension CVS::Metrics.
 
+0.09  Wed Sep  1 18:30:00 2004
+	- split module in 4
+
 0.08  Tue Mar 30 18:30:00 2004
 	- add option -o (output)
 	- add a cache (.cvs_log.pl)

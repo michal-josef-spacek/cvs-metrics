@@ -2,6 +2,9 @@ Changes
 Makefile.PL
 MANIFEST
 Metrics.pm
+Parser.pm
+Graph.pm
+TaggedChart.pm
 cvs_activity.pl
 cvs_energy.pl
 cvs_tklog.pl

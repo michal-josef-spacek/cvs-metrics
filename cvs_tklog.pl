@@ -10,6 +10,7 @@ use HTML::Template;
 use Pod::Usage;
 
 use CVS::Metrics;
+use CVS::Metrics::Graph;
 
 use Tk;
 

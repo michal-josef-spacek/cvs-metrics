@@ -8,6 +8,7 @@ use Getopt::Std;
 use Pod::Usage;
 
 use CVS::Metrics;
+use CVS::Metrics::Graph;
 
 use Wx;
 
