@@ -3,6 +3,7 @@
 use strict;
 
 use Getopt::Std;
+use File::Path;
 use File::Which;
 use HTML::Template;
 use Pod::Usage;
@@ -10,7 +11,7 @@ use Pod::Usage;
 use CVS::Metrics;
 
 my %opts;
-getopts('bd:f:ht:vHS:', \%opts);
+getopts('bd:f:ho:t:vHS:', \%opts);
 
 if ($opts{h}) {
 	pod2usage(-verbose => 1);
@@ -54,13 +55,19 @@ if ($opts{S}) {
 	$start_date = "2003/01/01" unless (defined $start_date);
 }
 
+my $output = $opts{o};
+if ($output and ! -d $output) {
+	mkpath $output
+			or die "can't create $output ($!).";
+}
+
 =head1 NAME
 
 cvs_activity - Extract metrics from cvs log
 
 =head1 SYNOPSIS
 
-cvs_activity [B<-f> I<file.log>] [B<-t> I<title>] [B<-d> "I<dirs> ..."] [B<-S> I<yyyy/mm/dd>]
+cvs_activity [B<-f> I<file.log>] [B<-o> I<dir>] [B<-t> I<title>] [B<-d> "I<dirs> ..."] [B<-S> I<yyyy/mm/dd>]
 
 =head1 OPTIONS
 
@@ -81,6 +88,10 @@ Mode off-line.
 =item -h
 
 Display Usage.
+
+=item -o
+
+Output directory.
 
 =item -t
 
@@ -134,12 +145,13 @@ Francois PERRAD, francois.perrad@gadz.org
 
 =cut
 
-my $parser = new CVS::Metrics::Parser();
-if ($parser) {
-	my $cvs_log = $parser->parse($cvs_logfile);
-
-	GeneratePNG($cvs_log, $title, @dirs);
-	GenerateHTML($title, @dirs);
+my $cvs_log = CVS::Metrics::CvsLog(
+		stream		=> $cvs_logfile,
+		use_cache	=> 1,
+);
+if ($cvs_log) {
+	GeneratePNG($cvs_log, $output, $title, @dirs);
+	GenerateHTML($output, $title, @dirs);
 	if ($opts{b}) {
 		print "Starting browser...";
 		exec "a_${title}.html";
@@ -176,15 +188,16 @@ sub FindCvs {
 #######################################################################
 
 sub GeneratePNG {
-	my ($cvs_log, $title, @dirs) = @_;
+	my ($cvs_log, $output, $title, @dirs) = @_;
 
 	my $img = $cvs_log->ActivityGD(".", $title, $start_date, 800, 225);
 
 	if (defined $img) {
-		my $outfile = "a_${title}.png";
-		$outfile =~ s/\//_/g;
-		open OUT, "> $outfile"
-				or die "can't open $outfile ($!).\n";
+		my $a_img = "a_${title}.png";
+		$a_img =~ s/\//_/g;
+		my $filename = (defined $output) ? $output . "/" . $a_img : $a_img;
+		open OUT, "> $filename"
+				or die "can't open $filename ($!).\n";
 		binmode OUT, ":raw";
 		print OUT $img->png();
 		close OUT;
@@ -194,10 +207,11 @@ sub GeneratePNG {
 		$img = $cvs_log->ActivityGD($dir, $dir, $start_date, 800, 225);
 
 		if (defined $img) {
-			my $outfile = "a_${title}_${dir}.png";
-			$outfile =~ s/\//_/g;
-			open OUT, "> $outfile"
-					or die "can't open $outfile ($!).\n";
+			my $a_img = "a_${title}_${dir}.png";
+			$a_img =~ s/\//_/g;
+			my $filename = (defined $output) ? $output . "/" . $a_img : $a_img;
+			open OUT, "> $filename"
+					or die "can't open $filename ($!).\n";
 			binmode OUT, ":raw";
 			print OUT $img->png();
 			close OUT;
@@ -208,7 +222,7 @@ sub GeneratePNG {
 #######################################################################
 
 sub GenerateHTML {
-	my ($title, @dirs) = @_;
+	my ($output, $title, @dirs) = @_;
 
 my $html = q{
 <?xml version='1.0' encoding='ISO-8859-1'?>
@@ -265,7 +279,8 @@ my $html = q{
 			loop		=> \@loop,
 	);
 
-	my $filename = "a_${title}.html";
+	my $basename = "a_${title}.html";
+	my $filename = (defined $output) ? $output . "/" . $basename : $basename;
 	open OUT, "> $filename"
 			or die "can't open $filename ($!)\n";
 	print OUT $template->output();

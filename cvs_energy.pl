@@ -4,13 +4,14 @@ use strict;
 
 use Getopt::Std;
 use File::Which;
+use File::Path;
 use HTML::Template;
 use Pod::Usage;
 
 use CVS::Metrics;
 
 my %opts;
-getopts('bd:f:ht:vH', \%opts);
+getopts('bd:f:ho:t:vH', \%opts);
 
 if ($opts{h}) {
 	pod2usage(-verbose => 1);
@@ -56,13 +57,19 @@ unless (defined $regex_tag) {
 	$regex_tag = '\d+';
 }
 
+my $output = $opts{o};
+if ($output and ! -d $output) {
+	mkpath $output
+			or die "can't create $output ($!).";
+}
+
 =head1 NAME
 
 cvs_energy - Extract metrics from cvs log
 
 =head1 SYNOPSIS
 
-cvs_energy [B<-f> I<file.log>] [B<-t> I<title>] [B<-H>] [B<-d> "I<dirs> ..."]
+cvs_energy [B<-f> I<file.log>] [B<-o> I<dir>] [B<-t> I<title>] [B<-H>] [B<-d> "I<dirs> ..."]
 
 =head1 OPTIONS
 
@@ -83,6 +90,10 @@ Mode off-line.
 =item -h
 
 Display Usage.
+
+=item -o
+
+Output directory.
 
 =item -t
 
@@ -136,10 +147,11 @@ Francois PERRAD, francois.perrad@gadz.org
 
 =cut
 
-my $parser = new CVS::Metrics::Parser();
-if ($parser) {
-	my $cvs_log = $parser->parse($cvs_logfile);
-
+my $cvs_log = CVS::Metrics::CvsLog(
+		stream		=> $cvs_logfile,
+		use_cache	=> 1,
+);
+if ($cvs_log) {
 	my @tags;
 	my $timed = $cvs_log->getTimedTag();
 	my %matched;
@@ -160,8 +172,8 @@ if ($parser) {
 		$cvs_log->insertHead();
 	}
 
-	GeneratePNG($cvs_log, \@tags, $title, @dirs);
-	GenerateHTML($title, @dirs);
+	GeneratePNG($cvs_log, $output, \@tags, $title, @dirs);
+	GenerateHTML($output, $title, @dirs);
 	if ($opts{b}) {
 		print "Starting browser...";
 		exec "e_${title}.html";
@@ -198,15 +210,16 @@ sub FindCvs {
 #######################################################################
 
 sub GeneratePNG {
-	my ($cvs_log, $tags, $title, @dirs) = @_;
+	my ($cvs_log, $output, $tags, $title, @dirs) = @_;
 
 	my $img = $cvs_log->EnergyGD($tags, ".", $title, 600, 400);
 
 	if (defined $img) {
-		my $outfile = "e_${title}.png";
-		$outfile =~ s/\//_/g;
-		open OUT, "> $outfile"
-				or die "can't open $outfile ($!).\n";
+		my $e_img = "e_${title}.png";
+		$e_img =~ s/\//_/g;
+		my $filename = (defined $output) ? $output . "/" . $e_img : $e_img;
+		open OUT, "> $filename"
+				or die "can't open $filename ($!).\n";
 		binmode OUT, ":raw";
 		print OUT $img->png();
 		close OUT;
@@ -216,10 +229,11 @@ sub GeneratePNG {
 		$img = $cvs_log->EnergyGD($tags, $dir, $dir, 600, 400);
 
 		if (defined $img) {
-			my $outfile = "e_${title}_${dir}.png";
-			$outfile =~ s/\//_/g;
-			open OUT, "> $outfile"
-					or die "can't open $outfile ($!).\n";
+			my $e_img = "e_${title}_${dir}.png";
+			$e_img =~ s/\//_/g;
+			my $filename = (defined $output) ? $output . "/" . $e_img : $e_img;
+			open OUT, "> $filename"
+					or die "can't open $filename ($!).\n";
 			binmode OUT, ":raw";
 			print OUT $img->png();
 			close OUT;
@@ -230,7 +244,7 @@ sub GeneratePNG {
 #######################################################################
 
 sub GenerateHTML {
-	my ($title, @dirs) = @_;
+	my ($output, $title, @dirs) = @_;
 
 my $html = q{
 <?xml version='1.0' encoding='ISO-8859-1'?>
@@ -287,7 +301,8 @@ my $html = q{
 			loop		=> \@loop,
 	);
 
-	my $filename = "e_${title}.html";
+	my $basename = "e_${title}.html";
+	my $filename = (defined $output) ? $output . "/" . $basename : $basename;
 	open OUT, "> $filename"
 			or die "can't open $filename ($!)\n";
 	print OUT $template->output();

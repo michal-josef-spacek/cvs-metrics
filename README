@@ -1,4 +1,4 @@
-CVS/Metrics version 0.05
+CVS/Metrics version 0.08
 ========================
 
     CVS::Metrics - Utilities for process cvs log
@@ -9,6 +9,9 @@ CVS/Metrics version 0.05
       - cvs_tklog.pl (Tk)
       - cvs_wxlog.pl (wxWindows)
       - cvs_current.pl
+    and 2 CGI scripts :
+      - cgi_cvs_evolq.pl
+      - cgi_cvs_evolr.pl
 
 INSTALLATION
 

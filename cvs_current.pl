@@ -3,6 +3,7 @@
 use strict;
 
 use File::Basename;
+use File::Path;
 use File::Which;
 use Getopt::Std;
 use HTML::Template;
@@ -11,7 +12,7 @@ use Pod::Usage;
 use CVS::Metrics;
 
 my %opts;
-getopts('d:f:hst:vS:', \%opts);
+getopts('d:f:ho:st:vS:', \%opts);
 
 if ($opts{h}) {
 	pod2usage(-verbose => 1);
@@ -63,13 +64,19 @@ if ($opts{S}) {
 	$start_date = "2003/01/01" unless (defined $start_date);
 }
 
+my $output = $opts{o};
+if ($output and ! -d $output) {
+	mkpath $output
+			or die "can't create $output ($!).";
+}
+
 =head1 NAME
 
 cvs_current - Extract from cvs log
 
 =head1 SYNOPSIS
 
-cvs_current [B<-f> I<file.log>] [B<-t> I<title>] [B<-s>] [B<-d> "I<dirs> ..."] [B<-S> I<yyyy/mm/dd>]
+cvs_current [B<-f> I<file.log>] [B<-o> I<dir>] [B<-t> I<title>] [B<-s>] [B<-d> "I<dirs> ..."] [B<-S> I<yyyy/mm/dd>]
 
 =head1 OPTIONS
 
@@ -86,6 +93,10 @@ Mode off-line.
 =item -h
 
 Display Usage.
+
+=item -o
+
+Output directory.
 
 =item -s
 
@@ -156,10 +167,12 @@ Francois PERRAD, francois.perrad@gadz.org
 
 =cut
 
-my $parser = new CVS::Metrics::Parser();
-if ($parser) {
-	our $cvs_log = $parser->parse($cvs_logfile);
-
+our $cvs_log = CVS::Metrics::CvsLog(
+		stream		=> $cvs_logfile,
+		use_cache	=> 1,
+		force		=> 1,
+);
+if ($cvs_log) {
 	our @tags;
 	my $timed = $cvs_log->getTimedTag();
 	my %matched;
@@ -180,11 +193,11 @@ if ($parser) {
 	$cvs_log->insertHead();
 
 	my @html = ();
-	push @html, GenerateHTML($cvs_log, \@tags, $title, ".", $tag_from, "HEAD", $flg_css, $start_date);
+	push @html, GenerateHTML($cvs_log, \@tags, $title, ".", $tag_from, "HEAD", $flg_css, $start_date, $output);
 	for my $path (@dirs) {
-		push @html, GenerateHTML($cvs_log, \@tags, $title, $path, $tag_from, "HEAD", $flg_css, $start_date);
+		push @html, GenerateHTML($cvs_log, \@tags, $title, $path, $tag_from, "HEAD", $flg_css, $start_date, $output);
 	}
-	GenerateSummary($title, $flg_css, \@html);
+	GenerateSummary($title, $flg_css, \@html, $output);
 }
 
 sub FindCvs {
@@ -341,16 +354,16 @@ my $style = q{
 	my $now = localtime();
 	my $generator = "cvs_current " . $CVS::Metrics::VERSION . " (Perl " . $] . ")";
 	my $dir = $path eq "." ? "all" : $path;
-	my $title_full = "${title}_${dir}_${tag_from}_to_${tag_to}";
-	$title_full =~ s/\//_/g;
+	my $title_full = "${title} ${dir} ${tag_from} to ${tag_to}";
 
 	my $image = $cvs_log->EnergyGD($tags, $path, $dir, 600, 400, $tag_from, $tag_to);
 
 	my $e_img = "e_${title_full}.png";
-	$e_img =~ s/\//_/g;
+	$e_img =~ s/[ \/]/_/g;
+	my $filename = (defined $output) ? $output . "/" . $e_img : $e_img;
 	if (defined $image) {
-		open OUT, "> $e_img"
-				or die "can't open $e_img ($!).\n";
+		open OUT, "> $filename"
+				or die "can't open $filename ($!).\n";
 		binmode OUT, ":raw";
 		print OUT $image->png();
 		close OUT;
@@ -377,10 +390,11 @@ my $style = q{
 	$image = $cvs_log->ActivityGD($path, $dir, $start_date, 800, 225, $date_from, $date_to);
 
 	my $a_img = "a_${title_full}.png";
-	$a_img =~ s/\//_/g;
+	$a_img =~ s/[ \/]/_/g;
+	$filename = (defined $output) ? $output . "/" . $a_img : $a_img;
 	if (defined $image) {
-		open OUT, "> $a_img"
-				or die "can't open $a_img ($!).\n";
+		open OUT, "> $filename"
+				or die "can't open $filename ($!).\n";
 		binmode OUT, ":raw";
 		print OUT $image->png();
 		close OUT;
@@ -475,8 +489,9 @@ my $style = q{
 			dirs		=> \@dirs,
 	);
 
-	my $filename = "${title_full}.html";
-	$filename =~ s/\//_/g;
+	my $basename = "${title_full}.html";
+	$basename =~ s/[ \/]/_/g;
+	$filename = (defined $output) ? $output . "/" . $basename : $basename;
 	open OUT, "> $filename"
 			or die "can't open $filename ($!)\n";
 	print OUT $template->output();
@@ -484,6 +499,8 @@ my $style = q{
 
 	if ($flg_css) {
 		my $stylesheet = "cvs_current.css";
+		$stylesheet = $output . "/" . $stylesheet
+				if ($output);
 		unless (-e $stylesheet) {
 			open OUT, "> $stylesheet"
 					or die "can't open $stylesheet ($!)\n";
@@ -492,11 +509,11 @@ my $style = q{
 		}
 	}
 
-	return $filename;
+	return $basename;
 }
 
 sub GenerateSummary {
-	my ($title, $flg_css, $r_html) = @_;
+	my ($title, $flg_css, $r_html, $output) = @_;
 
 my $html = q{
 <?xml version='1.0' encoding='ISO-8859-1'?>
@@ -563,6 +580,8 @@ my $style = q{
 	);
 
 	my $filename = "current.html";
+	$filename = $output . "/" . $filename
+			if ($output);
 	open OUT, "> $filename"
 			or die "can't open $filename ($!)\n";
 	print OUT $template->output();

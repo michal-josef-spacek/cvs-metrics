@@ -1,5 +1,10 @@
 Revision history for Perl extension CVS::Metrics.
 
+0.08  Tue Mar 30 18:30:00 2004
+	- add option -o (output)
+	- add a cache (.cvs_log.pl)
+	- add 2 new CGI scripts: cgi_cvs_evolq, cgi_cvs_evolr
+
 0.07  Thu Mar 25 12:30:00 2004
 	- add a production 'imported' in grammar
 

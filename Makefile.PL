@@ -21,6 +21,8 @@ WriteMakefile(
                         'cvs_tklog.pl',
                         'cvs_wxlog.pl',
                         'cvs_current.pl',
+                        'cgi_cvs_evolq.pl',
+                        'cgi_cvs_evolr.pl',
     ],
     'AUTHOR'        => "Francois PERRAD (francois.perrad\@gadz.org)",
     'dist'          => {

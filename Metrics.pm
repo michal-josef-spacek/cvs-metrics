@@ -3,7 +3,7 @@ use strict;
 package CVS::Metrics;
 
 use vars qw($VERSION);
-$VERSION = '0.07';
+$VERSION = '0.08';
 
 use File::Basename;
 use POSIX qw(mktime);
@@ -284,11 +284,12 @@ sub getEvolution {
 		my $dir = dirname($filename);
 		$evol{$dir} = {} unless (exists $evol{$dir});
 
-		print "$filename:";
+		my $trace = "$filename:";
 		foreach (keys %{$file->{description}}) {
-			print " ",$_;
+			$trace .= " " . $_;
 		}
-		print "\n";
+		$trace .= "\n";
+		warn $trace;
 		while (my ($rev_name, $rev) = each %{$file->{description}}) {
 #			print "$filename $rev_name\n";
 			next if ($rev_from and cmp_rev($rev_name, $rev_from) <= 0);
@@ -652,7 +653,7 @@ sub new {
 
 		imported: 'Imported' /(.*)/ EOL
 
-		Revision: /[-]+\n/ id date author state line(?) EOL message(s?)
+		Revision: /[-]+\n/ id date author state line(?) EOL(s) message(s?)
 				{
 					[
 						$item[2],
@@ -712,7 +713,7 @@ sub parse {
 	while (<IN>) {
 		if (/^[=]+$/) {
 			unless (defined $self->{parser}->File($text)) {
-				print "Not matched\n$text\n";
+				warn "Not matched\n$text\n";
 			}
 			$text = '';
 		} else {
@@ -722,6 +723,58 @@ sub parse {
 	close IN;
 	my $metric = \%cvs_log;
 	return bless($metric, "CVS::Metrics");
+}
+
+#######################################################################
+
+package CVS::Metrics;
+
+use Data::Dumper;
+
+our $cvs_log = bless({}, "CVS::Metrics");
+our $timestamp = 0;
+
+sub _insert {
+	my $self = shift;
+	my ($filename, $file) = @_;
+	$self->{$filename} = $file;
+}
+
+sub CvsLog {
+	my %hash = @_;
+
+	my $cache = ".cvs_log.pl";
+	if ($hash{use_cache} and !$hash{force}) {
+		if ( -e $cache) {
+			$hash{refresh} = 24 * 60 * 60		# 1 day
+					unless ($hash{refresh});
+			require $cache;
+			return $cvs_log
+					if ($timestamp + $hash{refresh} > time());
+		}
+	}
+
+	my $parser = new CVS::Metrics::Parser();
+	if ($parser) {
+		$cvs_log = $parser->parse($hash{stream});
+		if ($hash{use_cache}) {
+			$timestamp = time();
+			if (open OUT, "> $cache") {
+				print OUT "package CVS::Metrics;\n";
+				print OUT "\$timestamp = $timestamp;\n";
+				$Data::Dumper::Indent = 1;
+				while (my ($filename, $file) = each %{$cvs_log}) {
+					print OUT Dumper($file);
+					print OUT "\$cvs_log->_insert('$filename', \$VAR1);\n";
+				}
+				close OUT;
+			} else {
+				warn "can't open $cache ($!).\n";
+			}
+		}
+		return $cvs_log;
+	}
+	return undef;
 }
 
 1;

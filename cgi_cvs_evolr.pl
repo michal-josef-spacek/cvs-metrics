@@ -2,134 +2,77 @@
 
 use strict;
 
-use File::Which;
 use File::Basename;
-use File::Path;
-use Getopt::Std;
+use File::Which;
 use HTML::Template;
-use Pod::Usage;
+use CGI qw(header param);
+use CGI::Carp qw(fatalsToBrowser);
 
 use CVS::Metrics;
 
-use Tk;
+my $cvs_root = param("cvsroot");
+my $path = param("path");
+my $tag_from = param("from_tag");
+my $tag_to = param("to_tag");
 
-my %opts;
-getopts('f:ho:st:vDHS:', \%opts);
-
-if ($opts{h}) {
-	pod2usage(-verbose => 1);
-}
-
-if ($opts{v}) {
-	print "$0\n";
-	print "CVS::Metrics Version $CVS::Metrics::VERSION\n";
-	exit(0);
-}
+chdir $cvs_root
+		or die "can't change dir $cvs_root ($!).\n";
 
 my $cfg = ".cvs_metrics";
-our ($title, $regex_tag, $flg_head, $flg_dead, $flg_css, $start_date);
+our ($title, $regex_tag, $start_date);
 if ( -r $cfg) {
-	print "reading $cfg\n";
+	warn "reading $cfg\n";
 	require $cfg;
-}
-
-my $cvs_logfile;
-if ($opts{f}) {
-	$cvs_logfile = $opts{f};
-} else {
-	my $cvs = FindCvs();
-	$cvs_logfile = $cvs . " log |";
-}
-
-if ($opts{t}) {
-	$title = $opts{t};
-} else {
-	$title = "total" unless (defined $title);
-}
-
-if ($opts{H}) {
-	$flg_head = 1;
-}
-
-if ($opts{D}) {
-	$flg_dead = 1;
-}
-
-if ($opts{s}) {
-	$flg_css = 1;
 }
 
 unless (defined $regex_tag) {
 	$regex_tag = '\d+';
 }
 
-if ($opts{S}) {
-	$start_date = $opts{S};
-} else {
-	$start_date = "2003/01/01" unless (defined $start_date);
+unless (defined $start_date) {
+	$start_date = "2003/01/01";
 }
 
-my $output = $opts{o};
-if ($output and ! -d $output) {
-	mkpath $output
-			or die "can't create $output ($!).";
-}
+my $cvs = FindCvs();
+my $cvs_logfile = $cvs . " log |";
 
 =head1 NAME
 
-cvs_tklog - Extract from cvs log
+cgi_cvs_evolr - Extract from cvs log
 
 =head1 SYNOPSIS
 
-cvs_tklog [B<-f> I<file.log>] [B<-o> I<dir>] [B<-t> I<title>] [B<-s>] [B<-D>] [B<-H>] [B<-S> I<yyyy/mm/dd>]
+cgi_cvs_evolr
 
 =head1 OPTIONS
 
+CGI parameters
+
 =over 8
 
-=item -f
+=item cvsroot
 
-Mode off-line.
+Directory.
 
-=item -h
+=item path
 
-Display Usage.
+Sub-directory.
 
-=item -o
+=item from_tag
 
-Output directory.
+Tag.
 
-=item -s
+=item to_tag
 
-use an extern style sheet (cvs_tklog.css).
-
-=item -t
-
-Specify the main title.
-
-=item -v
-
-Display Version.
-
-=item -D
-
-suppress 'dead' files in tree.
-
-=item -H
-
-append HEAD as a tag.
-
-=item -S
-
-Specify the start date (yyyy/mm/dd).
+Tag.
 
 =back
 
 =head1 DESCRIPTION
 
-B<cvs_tklog> parses B<cvs log> and produces selected HTML reports.
+B<cgi_cvs_evolr> parses B<cvs log> and produces HTML reports.
 
-The Tk GUI allows to select a directory and a couple of from/to tags.
+These reports are between a couple of from/to tags.
 
 Each report is composed of three parts :
 
@@ -140,31 +83,31 @@ Each report is composed of three parts :
 - an detailed report : all informations about CVS commit, sorted first by directory,
 after grouped by message and sorted by date.
 
-This tool needs Tk, File::Which, GD, Chart::Plot::Canvas,
-HTML::Template and Parse::RecDescent modules.
+This tool needs File::Which, GD, Chart::Plot::Canvas, HTML::Template
+and Parse::RecDescent modules.
+
+B<cgi_cvs_evolr> is called from B<cgi_cvs_evolq> result.
 
 =head2 Configuration file (.cvs_metrics)
 
-If present, B<cvs_tklog> reads the configuration file F<.cvs_metrics>
+If present, B<cvs_current> reads the configuration file F<.cvs_metrics>
 in the current directory. The file could contains the following variables :
 
  $title = "main";
 
  $regex_tag = '^V\d+';
 
- $flg_head = 1;		# or 0
-
- $flg_dead = 1;		# or 0
+ @dirs = ( "abc", "def" , "def/hij" );
 
  $start_date = "2003/01/01";
 
 =head1 SEE ALSO
 
-cvs_activity, cvs_energy, cvs_wxlog, cvs_current
+cvs_activity, cvs_energy, cvs_tklog, cvs_wxlog
 
 =head1 COPYRIGHT
 
-(c) 2003-2004 Francois PERRAD, France. All rights reserved.
+(c) 2004 Francois PERRAD, France. All rights reserved.
 
 This library is distributed under the terms of the Artistic Licence.
 
@@ -174,35 +117,62 @@ Francois PERRAD, francois.perrad@gadz.org
 
 =cut
 
-my $cvs_log = CVS::Metrics::CvsLog(
+our $cvs_log = CVS::Metrics::CvsLog(
 		stream		=> $cvs_logfile,
+		use_cache	=> 1,
 );
 if ($cvs_log) {
-	my @tags;
+	our @tags;
 	my $timed = $cvs_log->getTimedTag();
 	my %matched;
 	while (my ($tag, $date) = each %{$timed}) {
-		print "Tag: ", $tag;
 		if ($tag =~ /$regex_tag/) {
 			$matched{$date} = $tag;
-			print " ... matched";
 		}
-		print "\n";
 	}
 	foreach (sort keys %matched) {
 		push @tags, $matched{$_};
 	}
 
-	if ($flg_head) {
-		push @tags, "HEAD";
-		$cvs_log->insertHead();
+	push @tags, "HEAD";
+	$cvs_log->insertHead();
+
+	my $found = 0;
+	foreach (@tags) {
+		if ($_ eq $tag_from) {
+			$found = 1;
+			last;
+		}
 	}
+	GenerateError($title, "Unknown tag_from '$tag_from'.")
+			unless ($found);
+	$found = 0;
+	foreach (@tags) {
+		if ($_ eq $tag_to) {
+			$found = 1;
+			last;
+		}
+	}
+	GenerateError($title, "Unknown tag_to '$tag_to'.")
+			unless ($found);
 
-	my $top = new Top($cvs_log, \@tags, $title, $flg_dead, $flg_css, $start_date, $output);
-	MainLoop();
+	my @tags2 = @tags;
+	while ($tag_from ne $tags2[0]) {
+		shift @tags2;
+	}
+	shift @tags2;
+	$found = 0;
+	foreach (@tags2) {
+		if ($_ eq $tag_to) {
+			$found = 1;
+			last;
+		}
+	}
+	GenerateError($title, "'$tag_from' >= '$tag_to'.")
+			unless ($found);
+
+	GenerateHTML($cvs_log, \@tags, $title, $path, $tag_from, $tag_to, $start_date);
 }
-
-#######################################################################
 
 sub FindCvs {
 	my $cvs = which('cvs');
@@ -232,7 +202,7 @@ sub FindCvs {
 #######################################################################
 
 sub GenerateHTML {
-	my ($cvs_log, $tags, $title, $path, $tag_from, $tag_to, $flg_css, $start_date, $output) = @_;
+	my ($cvs_log, $tags, $title, $path, $tag_from, $tag_to, $start_date) = @_;
 
 my $html = q{
 <?xml version='1.0' encoding='ISO-8859-1'?>
@@ -242,14 +212,10 @@ my $html = q{
     <meta http-equiv='Content-Type' content='text/html; charset=ISO-8859-1' />
     <meta name='generator' content='<TMPL_VAR NAME=generator>' />
     <meta name='date' content='<TMPL_VAR NAME=date>' />
-    <title>cvs_tklog <!-- TMPL_VAR NAME=title --></title>
-    <!-- TMPL_IF NAME=css -->
-    <link href='cvs_tklog.css' rel='stylesheet' type='text/css'/>
-    <!-- TMPL_ELSE -->
+    <title>cvs_current <!-- TMPL_VAR NAME=title --></title>
     <style type='text/css'>
       <!-- TMPL_VAR NAME=style -->
     </style>
-    <!-- /TMPL_IF -->
   </head>
   <body>
   <h1>Evolution Report</h1>
@@ -325,19 +291,19 @@ my $html = q{
   <!-- /TMPL_LOOP -->
   </table>
   <hr />
-  <cite>Generated by cvs_tklog (<!-- TMPL_VAR NAME=date -->)</cite>
+  <cite>Generated by cgi_cvs_evolr (<!-- TMPL_VAR NAME=date -->)</cite>
   </body>
 </html>
 };
 
 my $style = q{
-      body  { background-color: #FFFFCC }
+      body  { background-color: #CCFFFF }
       table { background-color: #FFFFFF }
-      th    { background-color: #DCDCDC }
+      th    { background-color: #CCCCCC }
       h1    { text-align: center }
       h2    { color: red }
       td a  { font-weight: bold }
-      table.layout  { background-color: #FFFFCC }
+      table.layout  { background-color: #CCFFFF }
       span.author   { font-weight: bold }
       span.filename { color: blue }
       span.revision { font-weight: bold; color: blue }
@@ -348,6 +314,7 @@ my $style = q{
       span.modified { font-weight: bold }
 };
 
+	$html =~ s/^\s+//gm;
 	my $template = new HTML::Template(
 			loop_context_vars	=> 1,
 			scalarref			=> \$html,
@@ -356,18 +323,19 @@ my $style = q{
 			unless (defined $template);
 
 	my $now = localtime();
-	my $generator = "cvs_tklog " . $CVS::Metrics::VERSION . " (Perl " . $] . ")";
+	my $generator = "cgi_cvs_evolr " . $CVS::Metrics::VERSION . " (Perl " . $] . ")";
 	my $dir = $path eq "." ? "all" : $path;
 	my $title_full = "${title} ${dir} ${tag_from} to ${tag_to}";
+	my $base = $cvs_root . "/";
+	$base =~ s/^$ENV{DOCUMENT_ROOT}//;
 
 	my $image = $cvs_log->EnergyGD($tags, $path, $dir, 600, 400, $tag_from, $tag_to);
 
 	my $e_img = "e_${title_full}.png";
 	$e_img =~ s/[ \/]/_/g;
 	if (defined $image) {
-		my $filename = (defined $output) ? $output . "/" . $e_img : $e_img;
-		open OUT, "> $filename"
-				or die "can't open $filename ($!).\n";
+		open OUT, "> $e_img"
+				or die "can't open $e_img ($!).\n";
 		binmode OUT, ":raw";
 		print OUT $image->png();
 		close OUT;
@@ -396,9 +364,8 @@ my $style = q{
 	my $a_img = "a_${title_full}.png";
 	$a_img =~ s/[ \/]/_/g;
 	if (defined $image) {
-		my $filename = (defined $output) ? $output . "/" . $a_img : $a_img;
-		open OUT, "> $filename"
-				or die "can't open $filename ($!).\n";
+		open OUT, "> $a_img"
+				or die "can't open $a_img ($!).\n";
 		binmode OUT, ":raw";
 		print OUT $image->png();
 		close OUT;
@@ -481,229 +448,78 @@ my $style = q{
 	}
 
 	$template->param(
-			css			=> $flg_css,
 			style		=> $style,
 			generator	=> $generator,
 			date		=> $now,
 			title		=> $title_full,
-			e_img		=> $e_img,
-			a_img		=> $a_img,
+			e_img		=> $base . $e_img,
+			a_img		=> $base . $a_img,
 			timed_tag	=> \@timed_tag,
 			summary		=> \@summary,
 			dirs		=> \@dirs,
 	);
 
-	my $basename = "${title_full}.html";
-	$basename =~ s/[ \/]/_/g;
-	my $filename = (defined $output) ? $output . "/" . $basename : $basename;
-	open OUT, "> $filename"
-			or die "can't open $filename ($!)\n";
-	print OUT $template->output();
-	close OUT;
-
-	if ($flg_css) {
-		my $stylesheet = "cvs_tklog.css";
-		$stylesheet = $output . "/" . $stylesheet
-				if ($output);
-		unless (-e $stylesheet) {
-			open OUT, "> $stylesheet"
-					or die "can't open $stylesheet ($!)\n";
-			print OUT $style;
-			close OUT;
-		}
-	}
-	return $filename;
+	print header(
+			-type  =>  'text/html',
+	);
+	print $template->output();
 }
 
-#######################################################################
+sub GenerateError {
+	my ($title, $message) = @_;
 
-package Top;
+my $error = q{
+<?xml version='1.0' encoding='ISO-8859-1'?>
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+  <head>
+    <meta http-equiv='Content-Type' content='text/html; charset=ISO-8859-1' />
+    <meta name='generator' content='<TMPL_VAR NAME=generator>' />
+    <meta name='date' content='<TMPL_VAR NAME=date>' />
+    <title>cvs_current <!-- TMPL_VAR NAME=title --></title>
+    <style type='text/css'>
+      <!-- TMPL_VAR NAME=style -->
+    </style>
+  </head>
+  <body>
+    <h1><!-- TMPL_VAR NAME=title --></h1>
+    <hr />
+    <h2>Error</h2>
+    <blockquote><em><!-- TMPL_VAR NAME=message --></em></blockquote>
+    <hr />
+    <cite>Generated by cvs_cgilog (<!-- TMPL_VAR NAME=date -->)</cite>
+  </body>
+</html>
+};
 
-use File::Basename;
-use Tk::Tree;
+my $style = q{
+      body  { background-color: #CCFFFF }
+      h1    { text-align: center }
+      h2    { color: red }
+};
 
-sub new {
-	my $proto = shift;
-	my $class = ref($proto) || $proto;
-	my $self = {};
-	bless($self, $class);
-	my ($cvs_log, $tags, $title, $flg_dead, $flg_css, $start_date, $output) = @_;
-	$self->{cvs_log} = $cvs_log;
-	$self->{tags} = $tags;
-	$self->{title} = $title;
-	$self->{css} = $flg_css;
-	$self->{start_date} = $start_date;
-	$self->{output} = $output;
-
-	$self->{mw} = MainWindow->new();
-	$self->{mw}->title("CVS log - $title");
-	$self->{mw}->minsize(800, 500);
-
-	$self->{tree} = $self->{mw}->Scrolled('Tree',
-			-scrollbars		=> "osw",
-			-command		=> [sub { shift->_upd_img(); }, $self],
+	$error =~ s/^\s+//gm;
+	my $template = new HTML::Template(
+			scalarref			=> \$error,
 	);
-	$self->{tree}->pack(
-			-side		=> 'left',
-			-fill		=> 'both',
-			-expand		=> 1,
+	die "can't create template ($!).\n"
+			unless (defined $template);
+
+	my $now = localtime();
+	my $generator = "cgi_cvs_evolr " . $CVS::Metrics::VERSION . " (Perl " . $] . ")";
+
+	$template->param(
+			style		=> $style,
+			generator	=> $generator,
+			date		=> $now,
+			title		=> $title,
+			message		=> $message,
 	);
-	$self->_init_tree($flg_dead);
 
-	$self->{fr} = $self->{mw}->Frame();
-	$self->{fr}->pack(
-			-side		=> 'left',
-			-fill		=> 'y',
+	print header(
+			-type  =>  'text/html',
 	);
-	$self->{plot} = $self->{cvs_log}->EnergyCv($self->{tags}, ".", $self->{title}, 600, 400, $self->{fr});
-	$self->{plot}->configure(
-			-bd			=> 2,
-			-relief		=> 'sunken',
-	);
-	$self->{plot}->pack();
-
-	my $fr2 = $self->{fr}->Frame();
-	$fr2->pack(
-			-side		=> 'bottom',
-	);
-	if (scalar($self->{tags}) >= 2) {
-		my $b_audit = $fr2->Button(
-				-text		=> 'Audit :',
-				-padx		=> 10,
-				-command	=> [ sub { shift->_audit(); }, $self ],
-		);
-		$b_audit->pack(
-				-side		=> 'left',
-		);
-		$self->{tag_from} = ${$self->{tags}}[-2];
-		$self->{tag_to} = ${$self->{tags}}[-1];
-		my @tags_from = @{$self->{tags}};
-		pop @tags_from;
-		my @tags_to = @{$self->{tags}};
-		shift @tags_to;
-		my $cb_from = $fr2->Optionmenu(
-				-options	=> \@tags_from,
-				-variable	=> \$self->{tag_from},
-		);
-		my $cb_to = $fr2->Optionmenu(
-				-options	=> \@tags_to,
-				-variable	=> \$self->{tag_to},
-		);
-		my $l_from = $fr2->Label(
-				-text		=> 'from',
-		);
-		my $l_to = $fr2->Label(
-				-text		=> 'to',
-		);
-		$l_from->pack(
-				-side		=> 'left',
-		);
-		$cb_from->pack(
-				-side		=> 'left',
-		);
-		$l_to->pack(
-				-side		=> 'left',
-		);
-		$cb_to->pack(
-				-side		=> 'left',
-		);
-	}
-
-	$self->{tree}->focus();
-	return $self;
-}
-
-sub _init_tree {
-	my $self = shift;
-	my ($flg_dead) = @_;
-
-	my %dir = (
-		'.'		=> 1
-	);
-	while (my ($filename, $file) = each %{$self->{cvs_log}}) {
-		if ($flg_dead) {
-			my $head = $file->{head};
-			my $state = $file->{description}->{$head}->{state};
-			next if ($state eq "dead");
-		}
-		my $path = dirname($filename);
-		$dir{$path} = 1;
-		while (($path = dirname($path)) ne '.') {
-			$dir{$path} = 1;
-		}
-	}
-
-	my $img = $self->{mw}->Getimage('folder');
-	foreach (sort keys %dir) {
-		my $path = $_;
-		unless ($_ eq '.') {
-			$path =~ s/\./_/g;
-			$path =~ s/\//\./g;
-			$path = '.' . $path;
-		}
-		$self->{tree}->add($path,
-				-text	=> $_,
-				-image	=> $img
-		);
-	}
-	$self->{tree}->autosetmode();
-}
-
-sub _upd_img {
-	my $self = shift;
-
-	$self->{plot}->destroy();
-
-	my @sel = $self->{tree}->selectionGet();
-	my $path = $sel[0] || '.';
-	my $title;
-	if ($path eq '.') {
-		$title = $self->{title};
-	} else {
-		$path =~ s/^\.//;
-		$path =~ s/\./\//g;
-		$title = $path;
-	}
-	print $path,"\n";
-	$self->{plot} = $self->{cvs_log}->EnergyCv($self->{tags}, $path, $title, 600, 400, $self->{fr});
-	$self->{plot}->configure(
-			-bd			=> 2,
-			-relief		=> 'sunken',
-	);
-	$self->{plot}->pack(
-	);
-}
-
-sub _audit {
-	my $self = shift;
-
-	my @tags = @{$self->{tags}};
-	while ($self->{tag_from} ne $tags[0]) {
-		shift @tags;
-	}
-	shift @tags;
-	my $found = 0;
-	foreach (@tags) {
-		$found = 1 if ($_ eq $self->{tag_to});
-	}
-	unless ($found) {
-		$self->{mw}->messageBox(
-				-message	=> "$self->{tag_from} >= $self->{tag_to}",
-				-icon		=> 'error',
-				-type		=> 'OK',
-		);
-		return;
-	}
-
-	my @sel = $self->{tree}->selectionGet();
-	my $path = $sel[0] || '.';
-	if ($path ne '.') {
-		$path =~ s/^\.//;
-		$path =~ s/\./\//g;
-	}
-
-	my $html = main::GenerateHTML($self->{cvs_log}, $self->{tags}, $self->{title}, $path, $self->{tag_from}, $self->{tag_to}, $self->{css}, $self->{start_date}, $self->{output});
-	print "Starting browser...\n";
-	system "start $html";
+	print $template->output();
+	exit;
 }
 

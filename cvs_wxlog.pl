@@ -2,6 +2,7 @@
 
 use strict;
 
+use File::Path;
 use File::Which;
 use Getopt::Std;
 use Pod::Usage;
@@ -11,7 +12,7 @@ use CVS::Metrics;
 use Wx;
 
 my %opts;
-getopts('f:hst:vDHS:', \%opts);
+getopts('f:ho:st:vDHS:', \%opts);
 
 if ($opts{h}) {
 	pod2usage(-verbose => 1);
@@ -66,13 +67,19 @@ if ($opts{S}) {
 	$start_date = "2003/01/01" unless (defined $start_date);
 }
 
+our $output = $opts{o};
+if ($output and ! -d $output) {
+	mkpath $output
+			or die "can't create $output ($!).";
+}
+
 =head1 NAME
 
 cvs_wxlog - Extract from cvs log
 
 =head1 SYNOPSIS
 
-cvs_wxlog [B<-f> I<file.log>] [B<-t> I<title>] [B<-s>] [B<-D>] [B<-H>] [B<-S> I<yyyy/mm/dd>]
+cvs_wxlog [B<-f> I<file.log>] [B<-o> I<dir>] [B<-t> I<title>] [B<-s>] [B<-D>] [B<-H>] [B<-S> I<yyyy/mm/dd>]
 
 =head1 OPTIONS
 
@@ -85,6 +92,10 @@ Mode off-line.
 =item -h
 
 Display Usage.
+
+=item -o
+
+Output directory.
 
 =item -s
 
@@ -161,10 +172,10 @@ Francois PERRAD, francois.perrad@gadz.org
 
 =cut
 
-my $parser = new CVS::Metrics::Parser();
-if ($parser) {
-	our $cvs_log = $parser->parse($cvs_logfile);
-
+our $cvs_log = CVS::Metrics::CvsLog(
+		stream		=> $cvs_logfile,
+);
+if ($cvs_log) {
 	our @tags;
 	my $timed = $cvs_log->getTimedTag();
 	my %matched;
@@ -661,6 +672,7 @@ sub new {
 			flg_dead	=> $main::flg_dead,
 			flg_css		=> $main::flg_css,
 			start_date	=> $main::start_date,
+			output		=> $main::output,
 	};
 	bless($self, $class);
 	$self->{path} = '.';
@@ -806,16 +818,16 @@ my $style = q{
 	my $now = localtime();
 	my $generator = "cvs_wxlog " . $CVS::Metrics::VERSION . " (Perl " . $] . ")";
 	my $dir = $self->{path} eq "." ? "all" : $self->{path};
-	my $title_full = "$self->{title}_${dir}_$self->{tag_from}_to_$self->{tag_to}";
-	$title_full =~ s/\//_/g;
+	my $title_full = "$self->{title} ${dir} $self->{tag_from} to $self->{tag_to}";
 
 	my $image = $self->{cvs_log}->EnergyGD($self->{tags}, $self->{path}, $dir, 600, 400, $self->{tag_from}, $self->{tag_to});
 
 	my $e_img = "e_${title_full}.png";
-	$e_img =~ s/\//_/g;
+	$e_img =~ s/[ \/]/_/g;
 	if (defined $image) {
-		open OUT, "> $e_img"
-				or die "can't open $e_img ($!).\n";
+		my $filename = ($self->{output}) ? $self->{output} . "/" . $e_img : $e_img;
+		open OUT, "> $filename"
+				or die "can't open $filename ($!).\n";
 		binmode OUT, ":raw";
 		print OUT $image->png();
 		close OUT;
@@ -842,10 +854,11 @@ my $style = q{
 	$image = $self->{cvs_log}->ActivityGD($self->{path}, $dir, $self->{start_date}, 800, 225, $date_from, $date_to);
 
 	my $a_img = "a_${title_full}.png";
-	$a_img =~ s/\//_/g;
+	$a_img =~ s/[ \/]/_/g;
 	if (defined $image) {
-		open OUT, "> $a_img"
-				or die "can't open $a_img ($!).\n";
+		my $filename = ($self->{output}) ? $self->{output} . "/" . $a_img : $a_img;
+		open OUT, "> $filename"
+				or die "can't open $filename ($!).\n";
 		binmode OUT, ":raw";
 		print OUT $image->png();
 		close OUT;
@@ -940,8 +953,9 @@ my $style = q{
 			dirs		=> \@dirs,
 	);
 
-	my $filename = "${title_full}.html";
-	$filename =~ s/\//_/g;
+	my $basename = "${title_full}.html";
+	$basename =~ s/[ \/]/_/g;
+	my $filename = ($self->{output}) ? $self->{output} . "/" . $basename : $basename;
 	open OUT, "> $filename"
 			or die "can't open $filename ($!)\n";
 	print OUT $template->output();
@@ -949,6 +963,8 @@ my $style = q{
 
 	if ($flg_css) {
 		my $stylesheet = "cvs_wxlog.css";
+		$stylesheet = $self->{output} . "/" . $stylesheet
+				if ($self->{output});
 		unless (-e $stylesheet) {
 			open OUT, "> $stylesheet"
 					or die "can't open $stylesheet ($!)\n";
