@@ -112,7 +112,7 @@ Specify the start date (yyyy/mm/dd).
 
 =head1 DESCRIPTION
 
-B<cvs_activity> parses B<cvs log> and produces selected HTML reports.
+B<cvs_tklog> parses B<cvs log> and produces selected HTML reports.
 
 The Tk GUI allows to select a directory and a couple of from/to tags.
 
@@ -125,7 +125,7 @@ Each report is composed of three parts :
 - an detailed report : all informations about CVS commit, sorted first by directory,
 after grouped by message and sorted by date.
 
-This tool needs TK, File::Which, GD, Chart::Plot::Canvas,
+This tool needs Tk, File::Which, GD, Chart::Plot::Canvas,
 HTML::Template and Parse::RecDescent modules.
 
 =head2 Configuration file (.cvs_metrics)

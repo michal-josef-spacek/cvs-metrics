@@ -1,12 +1,13 @@
-CVS/Metrics version 0.02
+CVS/Metrics version 0.03
 ========================
 
     CVS::Metrics - Utilities for process cvs log
 
-    This module supplies 3 utilities :
+    This module supplies 4 utilities :
       - cvs_activity.pl
       - cvs_energy.pl
-      - cvs_tklog.pl
+      - cvs_tklog.pl (Tk)
+      - cvs_wxlog.pl (wxWindows)
 
 INSTALLATION
 
