@@ -1,0 +1,38 @@
+CVS/Metrics version 0.02
+========================
+
+    CVS::Metrics - Utilities for process cvs log
+
+    This module supplies 3 utilities :
+      - cvs_activity.pl
+      - cvs_energy.pl
+      - cvs_tklog.pl
+
+INSTALLATION
+
+To install this module type the following:
+
+   perl Makefile.PL
+   make
+   make test
+   make install
+
+DEPENDENCIES
+
+This module requires these other modules and libraries:
+
+  GD, GD::Graph, Parse::RecDescent, Chart::Plot::Canvas
+
+TODO
+
+    Ports on *nix
+
+COPYRIGHT AND LICENCE
+
+  (c) 2003 Francois PERRAD, France. All rights reserved.
+
+  This library is distributed under the terms of the Artistic Licence.
+
+
+Send bug reports, comments and suggestions to francois.perrad@gadz.org
+

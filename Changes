@@ -1,0 +1,9 @@
+Revision history for Perl extension CVS::Metrics.
+
+0.02  Tue Apr 22 18:30:00
+	- first release
+
+0.01  Fri Apr 18 18:27:50 2003
+	- original version; created by h2xs 1.21 with options
+		-XA -n CVS::Metrics
+
