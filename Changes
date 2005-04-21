@@ -1,5 +1,10 @@
 Revision history for Perl extension CVS::Metrics.
 
+0.10  Thu Apr 21 18:30:00 2005
+	- parser.pm add branches rule in grammar
+	- cvs_current : add Branch report
+	- cvs_revbytag : new
+
 0.09  Wed Sep  1 18:30:00 2004
 	- split module in 4
 

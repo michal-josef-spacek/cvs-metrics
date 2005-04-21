@@ -28,7 +28,7 @@ if ($opts{v}) {
 }
 
 my $cfg = ".cvs_metrics";
-our ($title, $regex_tag, $flg_head, $flg_dead, $flg_css, $start_date);
+our ($title, $regex_tag, $flg_head, $flg_dead, $flg_css, $start_date, $regex_ignore_tag);
 if ( -r $cfg) {
 	print "reading $cfg\n";
 	require $cfg;
@@ -180,12 +180,12 @@ my $cvs_log = CVS::Metrics::CvsLog(
 );
 if ($cvs_log) {
 	my @tags;
-	my $timed = $cvs_log->getTimedTag();
+	my $timed = $cvs_log->getTimedTag($regex_ignore_tag);
 	my %matched;
 	while (my ($tag, $date) = each %{$timed}) {
 		print "Tag: ", $tag;
 		if ($tag =~ /$regex_tag/) {
-			$matched{$date} = $tag;
+			$matched{$date.$tag} = $tag;
 			print " ... matched";
 		}
 		print "\n";
@@ -374,7 +374,7 @@ my $style = q{
 		close OUT;
 	}
 
-	my $timed_tag = $cvs_log->getTimedTag();
+	my $timed_tag = $cvs_log->getTimedTag($regex_ignore_tag);
 	my @timed_tag = ();
 	foreach my $tag (@{$tags}) {
 		if ($tag eq "HEAD") {

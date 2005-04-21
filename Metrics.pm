@@ -3,7 +3,7 @@ use strict;
 package CVS::Metrics;
 
 use vars qw($VERSION);
-$VERSION = '0.09';
+$VERSION = '0.10';
 
 use File::Basename;
 use POSIX qw(mktime);
@@ -22,9 +22,11 @@ sub insertHead {
 
 sub getTagname {
 	my $cvs_log = shift;
+	my ($regex_ignore) = @_;
 
 	my %tagname;
-	foreach my $file (values %{$cvs_log}) {
+	while (my ($filename, $file) = each %{$cvs_log}) {
+		next if ($regex_ignore and $filename =~ /$regex_ignore/);  
 		foreach (keys %{$file->{'symbolic names'}}) {
 			unless (exists $tagname{$_}) {
 				$tagname{$_} = 1;
@@ -36,11 +38,12 @@ sub getTagname {
 
 sub getTimedTag {
 	my $cvs_log = shift;
+	my ($regex_ignore) = @_;
 
 	my %timed;
 #	open LOG, "> timed.log";
 	while (my ($filename, $file) = each %{$cvs_log}) {
-		next if (dirname($filename) eq '.');
+		next if ($regex_ignore and $filename =~ /$regex_ignore/);  
 		while (my ($tag, $rev_name) = each %{$file->{'symbolic names'}}) {
 			my $rev = $file->{description}->{$rev_name};
 			next unless (exists $rev->{date});
@@ -316,6 +319,135 @@ sub _get_day {
 	}
 }
 
+sub getRevByTag {
+	my $cvs_log = shift;
+	my ($tags, $path) = @_;
+	my %evol;
+
+	while (my ($filename, $file) = each %{$cvs_log}) {
+		next if ($path ne "." and $filename !~ /^$path/);
+		my $dir = dirname($filename);
+		$evol{$dir} = {} unless (exists $evol{$dir});
+#		my $trace = "$filename:";
+#		foreach (keys %{$file->{description}}) {
+#			$trace .= " " . $_;
+#		}
+#		$trace .= "\n";
+#		warn $trace;
+		my @rev;
+		foreach (@{$tags}) {
+			if ($_ eq "HEAD") {
+				push @rev, $file->{'head'};
+			} else {
+				if (exists $file->{'symbolic names'}->{$_}) {
+					push @rev, $file->{'symbolic names'}->{$_};  
+				} else {
+					push @rev, undef;
+				}
+			}
+		}
+		$evol{$dir}->{$filename} = \@rev;
+	}
+	return \%evol;
+}
+
+sub getBranch {
+	my $cvs_log = shift;
+	my ($path, $branch) = @_;
+	my %evol;
+
+	while (my ($filename, $file) = each %{$cvs_log}) {
+		next if ($path ne "." and $filename !~ /^$path/);
+		my $in = 0;
+		foreach (keys %{$file->{'symbolic names'}}) {
+			$in = 1 if ($_ eq $branch);
+		}
+		next unless ($in);
+		my $dir = dirname($filename);
+		$evol{$dir} = {} unless (exists $evol{$dir});
+
+		my $trace = "$filename:";
+		foreach (keys %{$file->{description}}) {
+			$trace .= " " . $_;
+		}
+		$trace .= "\n";
+		warn $trace;
+		my $rev_base = $file->{'symbolic names'}->{$branch};
+		$rev_base =~ s/\.0//;
+		while (my ($rev_name, $rev) = each %{$file->{description}}) {
+#			print "$filename $rev_name\n";
+			next if ($rev_name !~ /$rev_base/);
+			my $message = $rev->{message};
+			$message .= " " . $rev->{date} if ($message eq "no message");
+			my @tags;
+			foreach my $tag (keys %{$file->{'symbolic names'}}) {
+				if (cmp_rev($file->{'symbolic names'}->{$tag}, $rev_name) == 0) {
+					push @tags, $tag;
+				}
+			}
+			$evol{$dir}->{$message} = [] unless (exists $evol{$dir}->{$message});
+			push @{$evol{$dir}->{$message}}, {
+					filename	=> $filename,
+					date		=> $rev->{date},
+					author		=> $rev->{author},
+					state		=> $rev->{state},
+					revision	=> $rev_name,
+					tags		=> \@tags,
+			};
+		}
+	}
+	foreach (values %evol) {
+		foreach (values %{$_}) {
+			foreach my $desc (@{$_}) {
+				my $file = $cvs_log->{$desc->{filename}};
+				my $rev_base = $desc->{revision};
+				$rev_base =~ s/\.\d+$//;
+				my $rev_orig = undef;
+				while (my ($rev_name, $rev) = each %{$file->{description}}) {
+					foreach (@{$rev->{branches}}) {
+						if ($_ eq $rev_base) {
+							$rev_orig = $rev_name;
+							last;
+						}
+					}
+					last if (defined $rev_orig);
+				}
+				if (defined $rev_orig) {
+					my $state_orig = $file->{description}->{$rev_orig}->{state};
+					$desc->{orig} = [$rev_orig, $state_orig];
+				}
+			}
+		}
+	}
+	return \%evol;
+}
+
+sub getDirBranch {
+	my $cvs_log = shift;
+	my ($path, $branch) = @_;
+	my %evol;
+
+	while (my ($filename, $file) = each %{$cvs_log}) {
+		next if ($path ne "." and $filename !~ /^$path/);
+		my $in = 0;
+		foreach (keys %{$file->{'symbolic names'}}) {
+			$in = 1 if ($_ eq $branch);
+		}
+		next unless ($in);
+		my $dir = dirname($filename);
+		$evol{$dir} = 0 unless (exists $evol{$dir});
+		my $rev_base = $file->{'symbolic names'}->{$branch};
+		$rev_base =~ s/\.0//;
+		while (my ($rev_name, $rev) = each %{$file->{description}}) {
+#			print "$filename $rev_name\n";
+			next if ($rev_name !~ /$rev_base/);
+			$evol{$dir} ++;
+			last;
+		}
+	}
+	return \%evol;
+}
+
 #######################################################################
 
 use Data::Dumper;
@@ -382,7 +514,7 @@ L<cvs_activity.pl>, L<cvs_energy.pl>, L<cvs_tklog.pl>, L<cvs_wxlog.pl>, L<cvs_cu
 
 =head1 COPYRIGHT
 
-(c) 2003-2004 Francois PERRAD, France. All rights reserved.
+(c) 2003-2005 Francois PERRAD, France. All rights reserved.
 
 This library is distributed under the terms of the Artistic Licence.
 

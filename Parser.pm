@@ -84,7 +84,7 @@ sub new {
 
 		imported: 'Imported' /(.*)/ EOL
 
-		Revision: /[-]+\n/ id date author state line(?) EOL(s) message(s?)
+		Revision: /[-]+\n/ id date author state line(?) EOL branches(?) EOL(s?) message(s?)
 				{
 					[
 						$item[2],
@@ -94,7 +94,8 @@ sub new {
 								'state'		=> $item[5],
 #								'line_add'	=> ${$item[6]}[0],
 #								'line_del'	=> ${$item[6]}[1],
-								'message'	=> join "\n", @{$item[8]},
+								'branches'	=> ${$item[8]}[0],
+								'message'	=> join "\n", @{$item[10]},
 						}
 					];
 				}
@@ -113,6 +114,12 @@ sub new {
 
 		line: 'lines:' /[-+]?[0-9]+/ /[-+]?[0-9]+/
 				{ [ $item[2] , $item[3] ]; }
+
+		branches: 'branches:' Rev(s) EOL
+				{ $item[2]; }
+
+		Rev: /[0-9\.]+/ SEMICOL
+				{ $item[1]; }
 
 		message: /([^\-].*)|([-]+[^\-\n].*)/ EOL
 				{ $item[1] || $item[2]; }

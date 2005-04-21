@@ -9,12 +9,15 @@ use CGI::Carp qw(fatalsToBrowser);
 
 use CVS::Metrics;
 
-my $cvs_root = param("cvsroot");
+my $extract = param("extract");
+my $repository = param("repository");
+my $module = param("module");
+my $cvs_root = $extract . "/" . $repository . "/" . $module;
 chdir $cvs_root
 		or die "can't change dir $cvs_root ($!).\n";
 
 my $cfg = ".cvs_metrics";
-our ($title, $regex_tag, @dirs, $start_date);
+our ($title, $regex_tag, @dirs, $start_date, $regex_ignore_tag);
 if ( -r $cfg) {
 	warn "reading $cfg\n";
 	require $cfg;
@@ -25,7 +28,7 @@ unless (defined $regex_tag) {
 }
 
 unless (defined $start_date) {
-	$start_date = "2003/01/01";
+	$start_date = "2004/01/01";
 }
 
 my $cvs = FindCvs();
@@ -92,11 +95,11 @@ our $cvs_log = CVS::Metrics::CvsLog(
 );
 if ($cvs_log) {
 	our @tags;
-	my $timed = $cvs_log->getTimedTag();
+	my $timed = $cvs_log->getTimedTag($regex_ignore_tag);
 	my %matched;
 	while (my ($tag, $date) = each %{$timed}) {
 		if ($tag =~ /$regex_tag/) {
-			$matched{$date} = $tag;
+			$matched{$date.$tag} = $tag;
 		}
 	}
 	foreach (sort keys %matched) {
@@ -148,6 +151,7 @@ my $html = q{
     <meta http-equiv='Content-Type' content='text/html; charset=ISO-8859-1' />
     <meta name='generator' content='<TMPL_VAR NAME=generator>' />
     <meta name='date' content='<TMPL_VAR NAME=date>' />
+    <meta name='robots' content='nofollow' />
     <title>cvs_current <!-- TMPL_VAR NAME=title --></title>
     <style type='text/css'>
       <!-- TMPL_VAR NAME=style -->
@@ -160,7 +164,9 @@ my $html = q{
   <blockquote>
     <!-- TMPL_IF NAME=valid -->
     <form action='cgi_cvs_evolr.pl' method='get'>
-      <input type='hidden' name='cvsroot' value='<TMPL_VAR NAME=cvsroot>'/>
+      <input type='hidden' name='extract' value='<TMPL_VAR NAME=extract>'/>
+      <input type='hidden' name='repository' value='<TMPL_VAR NAME=repository>'/>
+      <input type='hidden' name='module' value='<TMPL_VAR NAME=module>'/>
       <table>
         <tr>
           <td>path :</td>
@@ -191,6 +197,12 @@ my $html = q{
         </tr>
         <tr>
           <td><input type='submit'/></td>
+        </tr>
+        <tr>
+          <td align='right'>
+            <input type='checkbox' name='force' value='1'/>
+          </td>
+          <td>Force generation (don't use nightly extract)</td>
         </tr>
       </table>
     </form>
@@ -253,7 +265,9 @@ my $style = q{
 			date		=> $now,
 			title		=> $title,
 			valid		=> $valid,
-			cvsroot		=> $cvs_root,
+			extract		=> $extract,
+			repository	=> $repository,
+			module		=> $module,
 			dirs		=> \@dirs,
 			from_tags	=> \@from_tags,
 			to_tags		=> \@to_tags,

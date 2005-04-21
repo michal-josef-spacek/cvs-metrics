@@ -24,6 +24,7 @@ WriteMakefile(
                         'cvs_tklog.pl',
                         'cvs_wxlog.pl',
                         'cvs_current.pl',
+                        'cvs_revbytag.pl',
                         'cgi_cvs_evolq.pl',
                         'cgi_cvs_evolr.pl',
     ],
