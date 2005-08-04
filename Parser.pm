@@ -82,7 +82,7 @@ sub new {
 					\%hash;
 				}
 
-		imported: 'Imported' /(.*)/ EOL
+		imported: /(Imported|\.)/ /(.*)/ EOL
 
 		Revision: /[-]+\n/ id date author state line(?) EOL branches(?) EOL(s?) message(s?)
 				{

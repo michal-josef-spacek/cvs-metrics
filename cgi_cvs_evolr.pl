@@ -18,6 +18,7 @@ my $path = param("path");
 my $tag_from = param("from_tag");
 my $tag_to = param("to_tag");
 my $force = param("force");
+my $viewcvs = param("viewcvs");
 
 my $cvs_root = $extract . "/" . $repository . "/" . $module;
 chdir $cvs_root
@@ -219,7 +220,7 @@ my $html = q{
     <meta name='generator' content='<TMPL_VAR NAME=generator>' />
     <meta name='date' content='<TMPL_VAR NAME=date>' />
     <meta name='robots' content='nofollow' />
-    <title>cvs_current <!-- TMPL_VAR NAME=title --></title>
+    <title>cvs_evol <!-- TMPL_VAR NAME=title --></title>
     <style type='text/css'>
       <!-- TMPL_VAR NAME=style -->
     </style>
@@ -441,14 +442,14 @@ my $style = q{
 						my $r1 = $file->{revision};
 						$r1 =~ s/(\d+)$/$1-1/e; 
 						my $r2 = $file->{revision};
-						$action = "<a class='modified' href='cvsweb.cgi/" . $module . "/" . $file->{filename} . ".diff?r1=" . $r1 . "\&r2=" . $r2 . "\&cvsroot=" . $repository . "'>MODIFIED</a>";
+						$action = "<a class='modified' href='" . $viewcvs . $module . $file->{filename} . ".diff?r1=" . $r1 . "\&r2=" . $r2 . "\&root=cvs:" . $repository . "'>MODIFIED</a>";
 					}
 				}
 				my $filename;
 				if ($file->{state} eq 'dead') {
 					$filename = basename($file->{filename});
 				} else {
-					$filename = "<a class='filename' href='cvsweb.cgi/" . $module . "/" . $file->{filename} . "?rev=" . $file->{revision} . "\&content-type=text\%2Fplain\&cvsroot=" . $repository . "'>" . basename($file->{filename}) . "</a>"; 
+					$filename = "<a class='filename' href='" . $viewcvs . $module . $file->{filename} . "?rev=" . $file->{revision} . "\&content-type=text\%2Fplain\&root=cvs:" . $repository . "'>" . basename($file->{filename}) . "</a>"; 
 				}
 				push @files, {
 					filename	=> $filename,
@@ -510,7 +511,7 @@ my $error = q{
     <meta http-equiv='Content-Type' content='text/html; charset=ISO-8859-1' />
     <meta name='generator' content='<TMPL_VAR NAME=generator>' />
     <meta name='date' content='<TMPL_VAR NAME=date>' />
-    <title>cvs_current <!-- TMPL_VAR NAME=title --></title>
+    <title>cvs_evol <!-- TMPL_VAR NAME=title --></title>
     <style type='text/css'>
       <!-- TMPL_VAR NAME=style -->
     </style>

@@ -12,6 +12,7 @@ use CVS::Metrics;
 my $extract = param("extract");
 my $repository = param("repository");
 my $module = param("module");
+my $viewcvs = param("viewcvs");
 my $cvs_root = $extract . "/" . $repository . "/" . $module;
 chdir $cvs_root
 		or die "can't change dir $cvs_root ($!).\n";
@@ -152,7 +153,7 @@ my $html = q{
     <meta name='generator' content='<TMPL_VAR NAME=generator>' />
     <meta name='date' content='<TMPL_VAR NAME=date>' />
     <meta name='robots' content='nofollow' />
-    <title>cvs_current <!-- TMPL_VAR NAME=title --></title>
+    <title>cvs_evol <!-- TMPL_VAR NAME=title --></title>
     <style type='text/css'>
       <!-- TMPL_VAR NAME=style -->
     </style>
@@ -167,6 +168,7 @@ my $html = q{
       <input type='hidden' name='extract' value='<TMPL_VAR NAME=extract>'/>
       <input type='hidden' name='repository' value='<TMPL_VAR NAME=repository>'/>
       <input type='hidden' name='module' value='<TMPL_VAR NAME=module>'/>
+      <input type='hidden' name='viewcvs' value='<TMPL_VAR NAME=viewcvs>'/>
       <table>
         <tr>
           <td>path :</td>
@@ -268,6 +270,7 @@ my $style = q{
 			extract		=> $extract,
 			repository	=> $repository,
 			module		=> $module,
+			viewcvs		=> $viewcvs,
 			dirs		=> \@dirs,
 			from_tags	=> \@from_tags,
 			to_tags		=> \@to_tags,
