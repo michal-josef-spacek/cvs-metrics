@@ -3,7 +3,7 @@ use strict;
 package CVS::Metrics;
 
 use vars qw($VERSION);
-$VERSION = '0.11';
+$VERSION = '0.12';
 
 use File::Basename;
 use POSIX qw(mktime);
@@ -61,6 +61,24 @@ sub getTimedTag {
 	}
 #	close LOG;
 	return \%timed;
+}
+
+sub getBranchname {
+	my $cvs_log = shift;
+	my ($regex_ignore) = @_;
+
+	my %tagname;
+	while (my ($filename, $file) = each %{$cvs_log}) {
+		next if ($regex_ignore and $filename =~ /$regex_ignore/);  
+		foreach (keys %{$file->{'symbolic names'}}) {
+			my $rev = $file->{'symbolic names'}->{$_}; 
+			next unless ($rev =~ /\.0\./);
+			unless (exists $tagname{$_}) {
+				$tagname{$_} = 1;
+			}
+		}
+	}
+	return keys %tagname;
 }
 
 sub _Energy {
@@ -223,6 +241,7 @@ sub getEvolution {
 #			print "$filename $rev_name\n";
 			next if ($rev_from and cmp_rev($rev_name, $rev_from) <= 0);
 			next if ($rev_to and cmp_rev($rev_name, $rev_to) > 0);
+			next if ($rev_name eq "1.1" and $rev->{state} eq "dead");	# file was initially added on branch 
 			my $message = $rev->{message};
 #			print "$rev_name $message\n";
 			$message .= " " . $rev->{date} if ($message eq "no message");
@@ -403,7 +422,8 @@ sub getBranch {
 				my $rev_base = $desc->{revision};
 				$rev_base =~ s/\.\d+$//;
 				my $rev_orig = undef;
-				while (my ($rev_name, $rev) = each %{$file->{description}}) {
+				for my $rev_name (keys %{$file->{description}}) {
+					my $rev = $file->{description}->{$rev_name};  
 					foreach (@{$rev->{branches}}) {
 						if ($_ eq $rev_base) {
 							$rev_orig = $rev_name;

@@ -26,7 +26,7 @@ if ($opts{v}) {
 }
 
 my $cfg = ".cvs_metrics";
-our ($title, $regex_tag, @dirs, $flg_css, $start_date, $regex_branch, $regex_ignore_tag);
+our ($title, $regex_tag, @dirs, $flg_css, $start_date, $regex_branch, $regex_ignore_tag, $flg_head);
 if ( -r $cfg) {
 	print "reading $cfg\n";
 	require $cfg;
@@ -195,21 +195,24 @@ if ($cvs_log) {
 		push @tags, $matched{$_};
 	}
 	our @branchs;
-	foreach ($cvs_log->getTagname()) {
+	foreach ($cvs_log->getBranchname($regex_ignore_tag)) {
 		if (/$regex_branch/) {
 			push @branchs, $_;
 		}
 	}
 	print "Branch : @branchs\n";
 
-	my $tag_from = $tags[-1];
-	push @tags, "HEAD";
-	$cvs_log->insertHead();
+	if ($flg_head) {
+		push @tags, "HEAD";
+		$cvs_log->insertHead();
+	}
+	my $tag_from = $tags[-2];
+	my $tag_to = $tags[-1];
 
 	my @html = ();                                                                              
-	push @html, GenerateHTML($cvs_log, \@tags, $title, ".", $tag_from, "HEAD", $flg_css, $start_date, $output);
+	push @html, GenerateHTML($cvs_log, \@tags, $title, ".", $tag_from, $tag_to, $flg_css, $start_date, $output);
 	for my $path (@dirs) {
-		push @html, GenerateHTML($cvs_log, \@tags, $title, $path, $tag_from, "HEAD", $flg_css, $start_date, $output);
+		push @html, GenerateHTML($cvs_log, \@tags, $title, $path, $tag_from, $tag_to, $flg_css, $start_date, $output);
 	}
 	my @html2 = ();                                                                              
 	for my $branch (@branchs) {
@@ -450,10 +453,12 @@ my $style = q{
 		my $dir = $evol->{$dirname};
 		my %date_sorted;
 		next unless (scalar keys %{$dir});
+		my $i = 0;
 		foreach my $message (keys %{$dir}) {
 			my $files = $dir->{$message};
 			my $file0 = $files->[0];
-			$date_sorted{$file0->{date}} = $message;
+			$date_sorted{$file0->{date} . "#$i"} = $message;
+			$i ++;
 		}
 		my $rowspan1 = 0;
 		my @comments = ();
@@ -473,7 +478,7 @@ my $style = q{
 				if ($file->{state} eq 'dead') {
 					$action = "<span class='deleted'>DELETED</span>";
 				} else {
-					if ($file->{revision} =~ /^1(\.1)+$/) {
+					if ($file->{revision} =~ /\.1$/) {
 						$action = "<span class='added'>ADDED</span>";
 					} else {
 						$action = "<span class='modified'>MODIFIED</span>";
@@ -695,7 +700,7 @@ my $style = q{
 				if ($file->{state} eq 'dead') {
 					$action = "<span class='deleted'>DELETED</span>";
 				} else {
-					if (exists $file->{orig} and ${$file->{orig}}[1] eq "dead") {
+					if ($file->{revision} =~ /\.1$/ and exists $file->{orig} and ${$file->{orig}}[1] eq "dead") {
 						$action = "<span class='added'>ADDED</span>";
 					} else {
 						$action = "<span class='modified'>MODIFIED</span>";

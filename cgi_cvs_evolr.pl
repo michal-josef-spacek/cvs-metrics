@@ -413,10 +413,12 @@ my $style = q{
 		my $dir = $evol->{$dirname};
 		my %date_sorted;
 		next unless (scalar keys %{$dir});
+		my $i = 0;
 		foreach my $message (keys %{$dir}) {
 			my $files = $dir->{$message};
 			my $file0 = $files->[0];
-			$date_sorted{$file0->{date}} = $message;
+			$date_sorted{$file0->{date} . "#$i"} = $message;
+			$i ++;
 		}
 		my $rowspan1 = 0;
 		my @comments = ();
@@ -436,11 +438,12 @@ my $style = q{
 				if ($file->{state} eq 'dead') {
 					$action = "<span class='deleted'>DELETED</span>";
 				} else {
-					if ($file->{revision} =~ /^1(\.1)+$/) {
+					if ($file->{revision} =~ /\.1$/) {
 						$action = "<span class='added'>ADDED</span>";
 					} else {
 						my $r1 = $file->{revision};
 						$r1 =~ s/(\d+)$/$1-1/e; 
+						$r1 =~ s/\.\d+\.0//; 
 						my $r2 = $file->{revision};
 						$action = "<a class='modified' href='" . $viewcvs . $module . $file->{filename} . ".diff?r1=" . $r1 . "\&r2=" . $r2 . "\&root=cvs:" . $repository . "'>MODIFIED</a>";
 					}
