@@ -438,7 +438,7 @@ my $style = q{
 				if ($file->{state} eq 'dead') {
 					$action = "<span class='deleted'>DELETED</span>";
 				} else {
-					if ($file->{revision} =~ /\.1$/) {
+					if ($file->{revision} =~ /^1\.1(\.\d+\.1)?$/) {
 						$action = "<span class='added'>ADDED</span>";
 					} else {
 						my $r1 = $file->{revision};

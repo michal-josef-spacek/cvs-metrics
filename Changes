@@ -1,5 +1,8 @@
 Revision history for Perl extension CVS::Metrics.
 
+0.13  Thu Aug 18 20:30:00 2005
+	- sorry for regressions
+
 0.12  Tue Aug 16 22:30:00 2005
 	- improve Branch report
 

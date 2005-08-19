@@ -3,7 +3,7 @@ use strict;
 package CVS::Metrics;
 
 use vars qw($VERSION);
-$VERSION = '0.12';
+$VERSION = '0.13';
 
 use File::Basename;
 use POSIX qw(mktime);
@@ -200,6 +200,8 @@ sub getDirEvolution {
 			while (my ($rev_name, $rev) = each %{$file->{description}}) {
 				next if ($rev_from and cmp_rev($rev_name, $rev_from) <= 0);
 				next if ($rev_to and cmp_rev($rev_name, $rev_to) > 0);
+				next if ($rev_to and !is_ancestor($rev_name, $rev_to));
+				next if ($rev_name eq "1.1" and $rev->{state} eq "dead");	# file was initially added on branch 
 				$in = 1;
 				last;
 			}
@@ -241,6 +243,7 @@ sub getEvolution {
 #			print "$filename $rev_name\n";
 			next if ($rev_from and cmp_rev($rev_name, $rev_from) <= 0);
 			next if ($rev_to and cmp_rev($rev_name, $rev_to) > 0);
+			next if ($rev_to and !is_ancestor($rev_name, $rev_to));
 			next if ($rev_name eq "1.1" and $rev->{state} eq "dead");	# file was initially added on branch 
 			my $message = $rev->{message};
 #			print "$rev_name $message\n";
@@ -283,6 +286,18 @@ sub cmp_rev {
 		return -1 if ($v1 < $v2);
 	}
 	return -1;
+}
+
+sub is_ancestor {
+	my ($parent, $rev) = @_;
+
+	return 1 if ($rev eq $parent);
+	while ($rev ne "1.1") {
+		$rev =~ s/(\d+)$/$1-1/e; 
+		$rev =~ s/\.\d+\.0//; 
+		return 1 if ($rev eq $parent);
+	}
+	return 0;
 }
 
 sub _Activity {
@@ -413,30 +428,6 @@ sub getBranch {
 					revision	=> $rev_name,
 					tags		=> \@tags,
 			};
-		}
-	}
-	foreach (values %evol) {
-		foreach (values %{$_}) {
-			foreach my $desc (@{$_}) {
-				my $file = $cvs_log->{$desc->{filename}};
-				my $rev_base = $desc->{revision};
-				$rev_base =~ s/\.\d+$//;
-				my $rev_orig = undef;
-				for my $rev_name (keys %{$file->{description}}) {
-					my $rev = $file->{description}->{$rev_name};  
-					foreach (@{$rev->{branches}}) {
-						if ($_ eq $rev_base) {
-							$rev_orig = $rev_name;
-							last;
-						}
-					}
-					last if (defined $rev_orig);
-				}
-				if (defined $rev_orig) {
-					my $state_orig = $file->{description}->{$rev_orig}->{state};
-					$desc->{orig} = [$rev_orig, $state_orig];
-				}
-			}
 		}
 	}
 	return \%evol;
