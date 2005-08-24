@@ -1,5 +1,8 @@
 Revision history for Perl extension CVS::Metrics.
 
+0.14  Wed Aug 24 07:30:00 2005
+	- kill zombies
+
 0.13  Thu Aug 18 20:30:00 2005
 	- sorry for regressions
 

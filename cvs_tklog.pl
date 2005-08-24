@@ -405,7 +405,7 @@ my $style = q{
 		close OUT;
 	}
 
-	my $dir_evol = $cvs_log->getDirEvolution($path, $tag_from, $tag_to);
+	my $dir_evol = $cvs_log->getDirEvolution($path, $tag_from, $tag_to, $tags);
 	my @summary = ();
 	foreach my $dirname (sort keys %{$dir_evol}) {
 		my @val = @{$dir_evol->{$dirname}};
@@ -418,7 +418,7 @@ my $style = q{
 		};
 	}
 
-	my $evol = $cvs_log->getEvolution($path, $tag_from, $tag_to);
+	my $evol = $cvs_log->getEvolution($path, $tag_from, $tag_to, $tags);
 	my @dirs = ();
 	foreach my $dirname (sort keys %{$evol}) {
 		my $dir = $evol->{$dirname};

@@ -428,7 +428,7 @@ my $style = q{
 		close OUT;
 	}
 
-	my $dir_evol = $cvs_log->getDirEvolution($path, $tag_from, $tag_to);
+	my $dir_evol = $cvs_log->getDirEvolution($path, $tag_from, $tag_to, $tags);
 	my @summary = ();
 	my $total_added = 0; 
 	my $total_modified = 0; 
@@ -447,7 +447,7 @@ my $style = q{
 		$total_deleted += $val[2]; 
 	}
 
-	my $evol = $cvs_log->getEvolution($path, $tag_from, $tag_to);
+	my $evol = $cvs_log->getEvolution($path, $tag_from, $tag_to, $tags);
 	my @dirs = ();
 	foreach my $dirname (sort keys %{$evol}) {
 		my $dir = $evol->{$dirname};
