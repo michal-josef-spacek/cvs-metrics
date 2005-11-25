@@ -3,7 +3,7 @@ use strict;
 package CVS::Metrics;
 
 use vars qw($VERSION);
-$VERSION = '0.14';
+$VERSION = '0.15';
 
 use File::Basename;
 use POSIX qw(mktime);
@@ -175,8 +175,9 @@ sub getDirEvolution {
 	my ($path, $tag_from, $tag_to, $tags) = @_;
 	my %evol;
 	my %tags;
+	my $i = 0;
 	foreach (@{$tags}) {
-		$tags{$_} = 1;
+		$tags{$_} = ++ $i;
 	}
 
 	while (my ($filename, $file) = each %{$cvs_log}) {
@@ -189,7 +190,8 @@ sub getDirEvolution {
 			my $in = 0;
 			foreach my $tag (sort keys %{$file->{'symbolic names'}}) {
 				next unless (exists $tags{$tag});
-				$in = 1 if ($tag gt $tag_from and $tag lt $tag_to);
+				$in = 1 if ($tags{$tag} > $tags{$tag_from} 
+						and $tags{$tag} < $tags{$tag_to});
 			}
 			next unless ($in);
 		}
@@ -222,8 +224,9 @@ sub getEvolution {
 	my ($path, $tag_from, $tag_to, $tags) = @_;
 	my %evol;
 	my %tags;
+	my $i = 0;
 	foreach (@{$tags}) {
-		$tags{$_} = 1;
+		$tags{$_} = ++ $i;
 	}
 
 	while (my ($filename, $file) = each %{$cvs_log}) {
@@ -236,7 +239,8 @@ sub getEvolution {
 			my $in = 0;
 			foreach my $tag (sort keys %{$file->{'symbolic names'}}) {
 				next unless (exists $tags{$tag});
-				$in = 1 if ($tag gt $tag_from and $tag lt $tag_to);
+				$in = 1 if ($tags{$tag} > $tags{$tag_from} 
+						and $tags{$tag} < $tags{$tag_to});
 			}
 			next unless ($in);
 		}
