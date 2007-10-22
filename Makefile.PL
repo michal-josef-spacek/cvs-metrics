@@ -3,7 +3,7 @@ use ExtUtils::MakeMaker;
 # the contents of the Makefile that is written.
 WriteMakefile(
     'NAME'          => 'CVS::Metrics',
-    'VERSION_FROM'  => 'Metrics.pm',
+    'VERSION_FROM'  => 'lib/Metrics.pm',
     'ABSTRACT'      => 'Utilities for process cvs log',
     'PREREQ_PM'     => {
                         'Chart::Plot::Canvas'   => 0,
@@ -13,20 +13,20 @@ WriteMakefile(
                         'Parse::RecDescent'     => 0,
     },
     'PM'            => {
-                        'Metrics.pm'        => '$(INST_LIBDIR)/Metrics.pm',
-                        'Parser.pm'         => '$(INST_LIBDIR)/Metrics/Parser.pm',
-                        'Graph.pm'          => '$(INST_LIBDIR)/Metrics/Graph.pm',
-                        'TaggedChart.pm'    => '$(INST_LIBDIR)/Metrics/TaggedChart.pm',
+                        'lib/Metrics.pm'        => '$(INST_LIBDIR)/Metrics.pm',
+                        'lib/Parser.pm'         => '$(INST_LIBDIR)/Metrics/Parser.pm',
+                        'lib/Graph.pm'          => '$(INST_LIBDIR)/Metrics/Graph.pm',
+                        'lib/TaggedChart.pm'    => '$(INST_LIBDIR)/Metrics/TaggedChart.pm',
     },
     'EXE_FILES'     => [
-                        'cvs_activity.pl',
-                        'cvs_energy.pl',
-                        'cvs_tklog.pl',
-                        'cvs_wxlog.pl',
-                        'cvs_current.pl',
-                        'cvs_revbytag.pl',
-                        'cgi_cvs_evolq.pl',
-                        'cgi_cvs_evolr.pl',
+                        'bin/cvs_activity',
+                        'bin/cvs_energy',
+                        'bin/cvs_tklog',
+                        'bin/cvs_wxlog',
+                        'bin/cvs_current',
+                        'bin/cvs_revbytag',
+                        'bin/cgi_cvs_evolq',
+                        'bin/cgi_cvs_evolr',
     ],
     'AUTHOR'        => "Francois PERRAD (francois.perrad\@gadz.org)",
     'dist'          => {

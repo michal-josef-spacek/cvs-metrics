@@ -1,39 +1,39 @@
-#!/usr/bin/perl -w
+#!/usr/bin/perl
 
 use strict;
+use  warnings;
 
-use File::Which;
 use HTML::Template;
 use CGI qw(header param);
 use CGI::Carp qw(fatalsToBrowser);
 
 use CVS::Metrics;
 
-my $extract = param("extract");
-my $repository = param("repository");
-my $module = param("module");
-my $viewcvs = param("viewcvs");
-my $cvs_root = $extract . "/" . $repository . "/" . $module;
+my $extract = param('extract');
+my $repository = param('repository');
+my $module = param('module');
+my $viewcvs = param('viewcvs');
+my $cvs_root = $extract . '/' . $repository . '/' . $module;
 chdir $cvs_root
-		or die "can't change dir $cvs_root ($!).\n";
+        or die "can't change dir $cvs_root ($!).\n";
 
-my $cfg = ".cvs_metrics";
+my $cfg = '.cvs_metrics';
 our ($title, $regex_tag, @dirs, $start_date, $regex_ignore_tag);
 if ( -r $cfg) {
-	warn "reading $cfg\n";
-	require $cfg;
+    warn "reading $cfg\n";
+    require $cfg;
 }
 
 unless (defined $regex_tag) {
-	$regex_tag = '\d+';
+    $regex_tag = '\d+';
 }
 
 unless (defined $start_date) {
-	$start_date = "2004/01/01";
+    $start_date = '2006/01/01';
 }
 
 my $cvs = FindCvs();
-my $cvs_logfile = $cvs . " log |";
+my $cvs_logfile = $cvs . ' log |';
 
 =head1 NAME
 
@@ -72,7 +72,7 @@ in the current directory. The file could contains the following variables :
 
  @dirs = ( "abc", "def" , "def/hij" );
 
- $start_date = "2003/01/01";
+ $start_date = "2006/01/01";
 
 =head1 SEE ALSO
 
@@ -80,7 +80,7 @@ cvs_activity, cvs_energy, cvs_tklog, cvs_wxlog, cvs_current
 
 =head1 COPYRIGHT
 
-(c) 2004 Francois PERRAD, France. All rights reserved.
+(c) 2004-2007 Francois PERRAD, France. All rights reserved.
 
 This library is distributed under the terms of the Artistic Licence.
 
@@ -91,58 +91,64 @@ Francois PERRAD, francois.perrad@gadz.org
 =cut
 
 our $cvs_log = CVS::Metrics::CvsLog(
-		stream		=> $cvs_logfile,
-		use_cache	=> 1,
+        stream      => $cvs_logfile,
+        use_cache   => 1,
 );
 if ($cvs_log) {
-	our @tags;
-	my $timed = $cvs_log->getTimedTag($regex_ignore_tag);
-	my %matched;
-	while (my ($tag, $date) = each %{$timed}) {
-		if ($tag =~ /$regex_tag/) {
-			$matched{$date.$tag} = $tag;
-		}
-	}
-	foreach (sort keys %matched) {
-		push @tags, $matched{$_};
-	}
+    our @tags;
+    my $timed = $cvs_log->getTimedTag($regex_ignore_tag);
+    my %matched;
+    while (my ($tag, $date) = each %{$timed}) {
+        if ($tag =~ /$regex_tag/) {
+            $matched{$date.$tag} = $tag;
+        }
+    }
+    foreach (sort keys %matched) {
+        push @tags, $matched{$_};
+    }
 
-	my $tag_from = $tags[-1];
-	push @tags, "HEAD";
-	$cvs_log->insertHead();
+    my $tag_from = $tags[-1];
+    push @tags, 'HEAD';
+    $cvs_log->insertHead();
 
-	GenerateHTML($title, \@tags, \@dirs);
+    GenerateHTML($title, \@tags, \@dirs);
 }
 
 sub FindCvs {
-	my $cvs = which('cvs');
-
-	if ( !defined $cvs and $^O eq 'MSWin32' ) {
-		my $cvs_setting;
-		eval 'use Win32::TieRegistry(Delimiter => "/")';
-		eval '$cvs_setting = $Registry->{"HKEY_CURRENT_USER/Software/WinCvs/wincvs/CVS settings"}';
-		$cvs = $cvs_setting->{'/P_WhichCvs'};
-		if (defined $cvs) {
-			$cvs =~ s/[\000\001]//g;
-			$cvs =~ s/wincvs\.exe\@$//;
-			if ( -e "${cvs}CVSNT\\\\cvs.exe") {
-				$cvs .= "CVSNT\\\\cvs.exe";
-			} else {
-				$cvs .= "cvs.exe";
-			}
-		}
-	}
-
-	die "$cvs not found !\n" unless (defined $cvs);
-
-	warn "Using CVS : $cvs\n";
-	return '"' . $cvs . '"';
+    my $cvs;
+    if ($^O eq 'MSWin32') {
+        eval 'use File::Which';
+        $cvs = which('cvs');
+        unless (defined $cvs) {
+            eval 'use Win32::TieRegistry(Delimiter => "/")';
+            my $cvs_setting;
+            my $hkey = 'HKEY_CURRENT_USER/Software/WinCvs/wincvs/CVS settings';
+            eval '$cvs_setting = $Registry->{$hkey}';
+            $cvs = $cvs_setting->{'/P_WhichCvs'};
+            if (defined $cvs) {
+                $cvs =~ s/[\000\001]//g;
+                $cvs =~ s/wincvs\.exe\@$//;
+                if ( -e "${cvs}CVSNT\\\\cvs.exe") {
+                    $cvs .= "CVSNT\\\\cvs.exe";
+                }
+                else {
+                    $cvs .= 'cvs.exe';
+                }
+            }
+        }
+        die "cvs not found !\n" unless (defined $cvs);
+        warn "Using CVS : $cvs\n";
+        return q{"} . $cvs . q{"};
+    }
+    else {
+        return 'cvs';
+    }
 }
 
 #######################################################################
 
 sub GenerateHTML {
-	my ($title, $r_tags, $r_dirs) = @_;
+    my ($title, $r_tags, $r_dirs) = @_;
 
 my $html = q{
 <?xml version='1.0' encoding='ISO-8859-1'?>
@@ -224,61 +230,61 @@ my $style = q{
       h2    { color: red }
 };
 
-	$html =~ s/^\s+//gm;
-	my $template = new HTML::Template(
-			loop_context_vars	=> 1,
-			scalarref			=> \$html,
-	);
-	die "can't create template ($!).\n"
-			unless (defined $template);
+    $html =~ s/^\s+//gm;
+    my $template = new HTML::Template(
+            loop_context_vars   => 1,
+            scalarref           => \$html,
+    );
+    die "can't create template ($!).\n"
+            unless (defined $template);
 
-	my $now = localtime();
-	my $generator = "cgi_cvs_evolq " . $CVS::Metrics::VERSION . " (Perl " . $] . ")";
+    my $now = localtime();
+    my $generator = 'cgi_cvs_evolq ' . $CVS::Metrics::VERSION . ' (Perl ' . $] . ')';
 
-	my $valid = scalar(@{$r_tags}) >= 2;
+    my $valid = scalar(@{$r_tags}) >= 2;
 
-	my @dirs = ();
-	push @dirs, {
-		value		=> ".",
-	};
-	foreach (@{$r_dirs}) {
-		push @dirs, {
-			value		=> $_,
-		}
-	}
-	my @from_tags = ();
-	foreach (@{$r_tags}) {
-		push @from_tags, {
-			value		=> $_,
-		}
-	}
-	pop @from_tags;
-	my @to_tags = ();
-	foreach (@{$r_tags}) {
-		push @to_tags, {
-			value		=> $_,
-		}
-	}
-	shift @to_tags;
+    my @dirs = ();
+    push @dirs, {
+        value       => '.',
+    };
+    foreach (@{$r_dirs}) {
+        push @dirs, {
+            value       => $_,
+        }
+    }
+    my @from_tags = ();
+    foreach (@{$r_tags}) {
+        push @from_tags, {
+            value       => $_,
+        }
+    }
+    pop @from_tags;
+    my @to_tags = ();
+    foreach (@{$r_tags}) {
+        push @to_tags, {
+            value       => $_,
+        }
+    }
+    shift @to_tags;
 
-	$template->param(
-			style		=> $style,
-			generator	=> $generator,
-			date		=> $now,
-			title		=> $title,
-			valid		=> $valid,
-			extract		=> $extract,
-			repository	=> $repository,
-			module		=> $module,
-			viewcvs		=> $viewcvs,
-			dirs		=> \@dirs,
-			from_tags	=> \@from_tags,
-			to_tags		=> \@to_tags,
-	);
+    $template->param(
+            style       => $style,
+            generator   => $generator,
+            date        => $now,
+            title       => $title,
+            valid       => $valid,
+            extract     => $extract,
+            repository  => $repository,
+            module      => $module,
+            viewcvs     => $viewcvs,
+            dirs        => \@dirs,
+            from_tags   => \@from_tags,
+            to_tags     => \@to_tags,
+    );
 
-	print header(
-			-type  =>  'text/html',
-	);
-	print $template->output();
+    print header(
+            -type  =>  'text/html',
+    );
+    print $template->output();
 }
 

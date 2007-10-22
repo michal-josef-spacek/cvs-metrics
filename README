@@ -1,17 +1,18 @@
-CVS/Metrics version 0.08
-========================
+CVS/Metrics
+===========
 
     CVS::Metrics - Utilities for process cvs log
 
-    This module supplies 5 utilities :
-      - cvs_activity.pl
-      - cvs_energy.pl
-      - cvs_tklog.pl (Tk)
-      - cvs_wxlog.pl (wxWindows)
-      - cvs_current.pl
+    This module supplies 6 utilities :
+      - cvs_activity
+      - cvs_energy
+      - cvs_tklog (Tk)
+      - cvs_wxlog (wxWindows)
+      - cvs_current
+      - cvs_revbytag
     and 2 CGI scripts :
-      - cgi_cvs_evolq.pl
-      - cgi_cvs_evolr.pl
+      - cgi_cvs_evolq
+      - cgi_cvs_evolr
 
 INSTALLATION
 
@@ -30,7 +31,7 @@ This module requires these other modules and libraries:
 
 COPYRIGHT AND LICENCE
 
-  (c) 2003-2004 Francois PERRAD, France. All rights reserved.
+  (c) 2003-2007 Francois PERRAD, France. All rights reserved.
 
   This library is distributed under the terms of the Artistic Licence.
 
