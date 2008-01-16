@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:                CVS-Metrics
-version:             0.16
+version:             0.17
 abstract:            Utilities for process cvs log
 license:             ~
 generated_by:        ExtUtils::MakeMaker version 6.3201
@@ -15,4 +15,4 @@ meta-spec:
     url:     http://module-build.sourceforge.net/META-spec-v1.2.html
     version: 1.2
 author:
-    - Francois PERRAD (francois.perrad@gadz.org)
+    - Francois PERRAD <francois.perrad@gadz.org>

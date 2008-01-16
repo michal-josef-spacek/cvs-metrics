@@ -15,5 +15,6 @@ bin/cgi_cvs_evolq
 bin/cgi_cvs_evolr
 README
 test.pl
+t/pod.t
 
 META.yml                                 Module meta-data (added by MakeMaker)

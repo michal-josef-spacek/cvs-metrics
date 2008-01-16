@@ -3,7 +3,7 @@ use warnings;
 
 package CVS::Metrics;
 
-our $VERSION = '0.16';
+our $VERSION = '0.17';
 
 use File::Basename;
 use POSIX qw(mktime);

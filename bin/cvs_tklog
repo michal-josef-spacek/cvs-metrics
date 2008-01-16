@@ -168,7 +168,7 @@ cvs_activity, cvs_energy, cvs_wxlog, cvs_current
 
 =head1 COPYRIGHT
 
-(c) 2003-2007 Francois PERRAD, France. All rights reserved.
+(c) 2003-2008 Francois PERRAD, France. All rights reserved.
 
 This library is distributed under the terms of the Artistic Licence.
 
@@ -719,9 +719,12 @@ sub _audit {
     }
 
     my $html = main::GenerateHTML($self->{cvs_log}, $self->{tags}, $self->{title}, $path, $self->{tag_from}, $self->{tag_to}, $self->{css}, $self->{start_date}, $self->{output});
+    print "Starting browser...\n";
     if ($^O eq 'MSWin32') {
-        print "Starting browser...\n";
         system "start $html";
+    }
+    else {
+        system "x-www-browser $html &";
     }
 }
 

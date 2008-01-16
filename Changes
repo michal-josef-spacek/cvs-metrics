@@ -1,5 +1,8 @@
 Revision history for Perl extension CVS::Metrics.
 
+0.17  Wed Jan 15 18:30:00 2008
+	- call default browser on *nix
+
 0.16  Mon Oct 22 18:30:00 2007
 	- some Perl Best Practices
 
