@@ -3,7 +3,7 @@ package CVS::Metrics;
 use strict;
 use warnings;
 
-our $VERSION = '0.16';
+our $VERSION = '0.18';
 
 use GD;
 use CVS::Metrics::TaggedChart;
@@ -26,7 +26,7 @@ sub EnergyGD {
         if (scalar @tags_pre) {
             push @tags_pre, $tags2[0];
             push @data_pre, ${$data}[0], ${$data}[1];
-            $img->setData(\@data_pre, 'blue');
+            $img->setData(\@data_pre, 'blue up');
             $img->setTag(\@tags_pre);
         }
         unless ($tag_to eq 'HEAD') {
@@ -45,15 +45,15 @@ sub EnergyGD {
             if (scalar @tags_post) {
                 unshift @tags_post, $tags2[-1];
                 unshift @data_post, ${$data}[-2], ${$data}[-1];
-                $img->setData(\@data_post, 'blue');
+                $img->setData(\@data_post, 'blue up');
                 $img->setTag(\@tags_post);
             }
         }
-        $img->setData($data, 'red');
+        $img->setData($data, 'red up');
         $img->setTag(\@tags2);
     }
     else {
-        $img->setData($data, 'blue');
+        $img->setData($data, 'blue up');
         $img->setTag($tags);
     }
     $img->setGraphOptions(
@@ -73,7 +73,7 @@ sub EnergyCv {
 
     my $data = $cvs_log->_Energy($tags, $path);
     my $img = new CVS::Metrics::TaggedChart($width, $height);
-    $img->setData($data, 'blue');
+    $img->setData($data, 'blue up');
     $img->setTag($tags);
     $img->setGraphOptions(
             title           => $title,

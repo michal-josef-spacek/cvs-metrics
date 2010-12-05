@@ -3,7 +3,7 @@ package CVS::Metrics::TaggedChart;
 use strict;
 use warnings;
 
-our $VERSION = '0.16';
+our $VERSION = '0.18';
 
 use GD;
 use base qw(Chart::Plot::Canvas);
@@ -37,6 +37,10 @@ sub _drawTag {
             $color =~ tr/A-Z/a-z/;
         }
 
+        # get direction
+        my $dir = '';
+        $dir = 'up' if $self->{'_dataStyle'}->{$dataSetLabel} =~ /up/i;
+
         my $num = @{ $self->{'_data'}->{$dataSetLabel} };
         my $prevpx = 0;
         for (my $i = 0; $i < $num/2; $i ++) {
@@ -47,11 +51,18 @@ sub _drawTag {
                     $self->{_data}->{$dataSetLabel}[2*$i+1]
             );
 
-            if ($px != $prevpx) {
-                $self->{'_im'}->stringUp(gdTinyFont, $px-8, $py-5,
-                       $self->{_tag}->{$dataSetLabel}[$i], $self->{$color})
+            my $lbl = $self->{_tag}->{$dataSetLabel}[$i] || '';
+            if ($lbl ne '' && $px != $prevpx) {
+                if ($dir eq 'up') {
+                    $self->{'_im'}->stringUp(gdTinyFont, $px-8, $py-5,
+                           $lbl, $self->{$color});
+                }
+                else {
+                    $self->{'_im'}->string(gdTinyFont, $px+5, $py-4,
+                           $lbl, $self->{$color});
+                }
+                $prevpx = $px;
             }
-            $prevpx = $px;
         }
     }
 }
