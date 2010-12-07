@@ -1,6 +1,6 @@
 Revision history for Perl extension CVS::Metrics.
 
-0.18
+0.18  Tue Dec  7 10:30:00 2010
 	- TaggedChart: add a style 'up' (for text direction)
 
 0.17  Wed Jan 15 18:30:00 2008
