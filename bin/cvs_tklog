@@ -168,7 +168,7 @@ cvs_activity, cvs_energy, cvs_wxlog, cvs_current
 
 =head1 COPYRIGHT
 
-(c) 2003-2008 Francois PERRAD, France. All rights reserved.
+(c) 2003-2010 Francois PERRAD, France. All rights reserved.
 
 This library is distributed under the terms of the Artistic Licence.
 
@@ -202,7 +202,7 @@ if ($cvs_log) {
         $cvs_log->insertHead();
     }
 
-    my $top = new Top($cvs_log, \@tags, $title, $flg_dead, $flg_css, $start_date, $output);
+    my $top = Top->new($cvs_log, \@tags, $title, $flg_dead, $flg_css, $start_date, $output);
     MainLoop();
 }
 
@@ -358,7 +358,7 @@ my $style = q{
       span.modified { font-weight: bold }
 };
 
-    my $template = new HTML::Template(
+    my $template = HTML::Template->new(
             loop_context_vars   => 1,
             scalarref           => \$html,
     );

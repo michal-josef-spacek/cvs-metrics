@@ -113,7 +113,7 @@ cvs_activity, cvs_energy, cvs_tklog, cvs_wxlog
 
 =head1 COPYRIGHT
 
-(c) 2004-2007 Francois PERRAD, France. All rights reserved.
+(c) 2004-2010 Francois PERRAD, France. All rights reserved.
 
 This library is distributed under the terms of the Artistic Licence.
 
@@ -338,7 +338,7 @@ my $style = q{
 };
 
     $html =~ s/^\s+//gm;
-    my $template = new HTML::Template(
+    my $template = HTML::Template->new(
             loop_context_vars   => 1,
             scalarref           => \$html,
     );
@@ -547,7 +547,7 @@ my $style = q{
 };
 
     $error =~ s/^\s+//gm;
-    my $template = new HTML::Template(
+    my $template = HTML::Template->new(
             scalarref           => \$error,
     );
     die "can't create template ($!).\n"

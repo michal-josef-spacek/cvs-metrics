@@ -166,7 +166,7 @@ cvs_activity, cvs_energy, cvs_tklog, cvs_current
 
 =head1 COPYRIGHT
 
-(c) 2003-2007 Francois PERRAD, France. All rights reserved.
+(c) 2003-2010 Francois PERRAD, France. All rights reserved.
 
 This library is distributed under the terms of the Artistic Licence.
 
@@ -200,7 +200,7 @@ if ($cvs_log) {
         $cvs_log->insertHead();
     }
 
-    my $app = new MyApp();
+    my $app = MyApp->new();
     $app->MainLoop();
 }
 
@@ -255,10 +255,10 @@ sub new {
 
     eval 'use Wx::ActiveX::IE';
     die $@ if ($@);
-    my $IE = new Wx::ActiveX::IE($self, -1, wxDefaultPosition, wxDefaultSize);
+    my $IE = Wx::ActiveX::IE->new($self, -1, wxDefaultPosition, wxDefaultSize);
     $IE->LoadUrl($url);
 
-    my $top_s = new Wx::BoxSizer(wxVERTICAL);
+    my $top_s = Wx::BoxSizer->new(wxVERTICAL);
     $top_s->Add($IE, 1, wxGROW|wxALL, 0);
 
     $self->SetSizer($top_s);
@@ -286,10 +286,10 @@ sub new {
             wxDefaultPosition, wxDefaultSize);
     $self->SetIcon(Wx::GetWxPerlIcon());
 
-    my $BROWSER = new Wx::HtmlWindow($self, -1, wxDefaultPosition, wxDefaultSize);
+    my $BROWSER = Wx::HtmlWindow->new($self, -1, wxDefaultPosition, wxDefaultSize);
     $BROWSER->LoadPage($file);
 
-    my $top_s = new Wx::BoxSizer(wxVERTICAL);
+    my $top_s = Wx::BoxSizer->new(wxVERTICAL);
     $top_s->Add($BROWSER, 1, wxGROW|wxALL, 0);
 
     $self->SetSizer($top_s);
@@ -326,29 +326,29 @@ sub new {
     $self->CreateMyMenuBar();
     $self->CreateMyTreeCtrl();
 
-    my $rightsizer = new Wx::BoxSizer(wxVERTICAL);
-    my $bottomsizer = new Wx::BoxSizer(wxHORIZONTAL);
-    my $topsizer = new Wx::BoxSizer(wxHORIZONTAL);
+    my $rightsizer = Wx::BoxSizer->new(wxVERTICAL);
+    my $bottomsizer = Wx::BoxSizer->new(wxHORIZONTAL);
+    my $topsizer = Wx::BoxSizer->new(wxHORIZONTAL);
 
     if (scalar(@{$model->{tags}}) >= 2) {
-        my $b_audit = new Wx::Button($self, -1, 'Audit :');
+        my $b_audit = Wx::Button->new($self, -1, 'Audit :');
 
         my @tags_from = @{$model->{tags}};
         pop @tags_from;
         my @tags_to = @{$model->{tags}};
         shift @tags_to;
 
-        my $cb_from = new Wx::ComboBox($self, -1, $model->{tag_from},
+        my $cb_from = Wx::ComboBox->new($self, -1, $model->{tag_from},
                 wxDefaultPosition, wxDefaultSize,
                 \@tags_from, wxCB_READONLY);
 
-        my $cb_to = new Wx::ComboBox($self, -1, $model->{tag_to},
+        my $cb_to = Wx::ComboBox->new($self, -1, $model->{tag_to},
                 wxDefaultPosition, wxDefaultSize,
                 \@tags_to, wxCB_READONLY);
 
-        my $l_from = new Wx::StaticText($self, -1, 'from',
+        my $l_from = Wx::StaticText->new($self, -1, 'from',
                 wxDefaultPosition, wxDefaultSize, wxST_NO_AUTORESIZE );
-        my $l_to = new Wx::StaticText($self, -1, 'to',
+        my $l_to = Wx::StaticText->new($self, -1, 'to',
                 wxDefaultPosition, wxDefaultSize, wxST_NO_AUTORESIZE );
 
         EVT_BUTTON($self, $b_audit, \&OnAudit);
@@ -362,7 +362,7 @@ sub new {
         $bottomsizer->Add($cb_to, 0, wxALL, 2);
     }
 
-    $self->{bmp} = new Wx::StaticBitmap($self, -1, new Wx::Bitmap(600, 400, -1));
+    $self->{bmp} = Wx::StaticBitmap->new($self, -1, Wx::Bitmap->new(600, 400, -1));
 
     $rightsizer->Add($self->{bmp}, 0, wxALL|wxALIGN_CENTER, 1);
     $rightsizer->Add($bottomsizer, 0, wxALL|wxALIGN_CENTER, 8);
@@ -384,9 +384,9 @@ sub new {
 sub CreateMyMenuBar {
     my $self = shift;
 
-    my $bar = new Wx::MenuBar();
+    my $bar = Wx::MenuBar->new();
 
-    my $file = new Wx::Menu();
+    my $file = Wx::Menu->new();
     $file->Append(ID_QUIT, 'E&xit');
 
     $bar->Append($file, '&File');
@@ -397,7 +397,7 @@ sub CreateMyMenuBar {
 sub CreateMyImageList {
     my $self = shift;
 
-    my $imagelist = new Wx::ImageList(16, 16, 3);
+    my $imagelist = Wx::ImageList->new(16, 16, 3);
 
     my $xpm_open_folder = [
         # columns rows colors chars-per-pixel
@@ -534,14 +534,14 @@ sub CreateMyImageList {
 
     my $binpath = $0;
     $binpath =~ s/[^\\\/]+$//;
-    my $open_folder = new Wx::Image(Wx::Bitmap->newFromXPM($xpm_open_folder));
-    $open_folder = new Wx::Bitmap($open_folder->Rescale(16,16));
+    my $open_folder = Wx::Image->new(Wx::Bitmap->newFromXPM($xpm_open_folder));
+    $open_folder = Wx::Bitmap->new($open_folder->Rescale(16,16));
     $imagelist->Add($open_folder);
-    my $closed_folder = new Wx::Image(Wx::Bitmap->newFromXPM($xpm_closed_folder));
-    $closed_folder = new Wx::Bitmap($closed_folder->Rescale(16,16));
+    my $closed_folder = Wx::Image->new(Wx::Bitmap->newFromXPM($xpm_closed_folder));
+    $closed_folder = Wx::Bitmap->new($closed_folder->Rescale(16,16));
     $imagelist->Add($closed_folder);
-    my $doc = new Wx::Image(Wx::Bitmap->newFromXPM($xpm_docl));
-    $doc = new Wx::Bitmap($doc->Rescale(16,16));
+    my $doc = Wx::Image->new(Wx::Bitmap->newFromXPM($xpm_docl));
+    $doc = Wx::Bitmap->new($doc->Rescale(16,16));
     $imagelist->Add($doc);
     return $imagelist;
 }
@@ -550,7 +550,7 @@ sub CreateMyTreeCtrl {
     my $self = shift;
     my $model = $self->{model};
 
-    $self->{tree} = new Wx::TreeCtrl($self, -1, wxDefaultPosition, [150, 400],
+    $self->{tree} = Wx::TreeCtrl->new($self, -1, wxDefaultPosition, [150, 400],
             wxTR_HAS_BUTTONS|wxSUNKEN_BORDER);
 
     $self->{imagelist} = $self->CreateMyImageList();
@@ -573,12 +573,12 @@ sub CreateMyTreeCtrl {
     }
 
     # populate TreeCtrl
-    $dir{'.'} = $self->{tree}->AddRoot($model->{title}, -1, -1, new Wx::TreeItemData('.'));
+    $dir{'.'} = $self->{tree}->AddRoot($model->{title}, -1, -1, Wx::TreeItemData->new('.'));
 
     foreach my $path (sort keys %dir) {
         unless ($path eq '.') {
             my $parent = $dir{dirname($path)};
-            $dir{$path} = $self->{tree}->AppendItem($parent, basename($path), -1, -1, new Wx::TreeItemData($path));
+            $dir{$path} = $self->{tree}->AppendItem($parent, basename($path), -1, -1, Wx::TreeItemData->new($path));
         }
     }
 
@@ -615,9 +615,9 @@ sub OnSelChange {
     binmode $OUT, ':raw';
     print $OUT $gd->png();
     close $OUT;
-    my $img = new Wx::Image($file, wxBITMAP_TYPE_PNG);
+    my $img = Wx::Image->new($file, wxBITMAP_TYPE_PNG);
     unlink $file;
-    $self->{bmp}->SetBitmap(new Wx::Bitmap($img));
+    $self->{bmp}->SetBitmap(Wx::Bitmap->new($img));
 }
 
 sub OnComboFrom {
@@ -646,7 +646,7 @@ sub OnAudit {
         $found = 1 if ($_ eq $model->{tag_to});
     }
     unless ($found) {
-        my $msg = new Wx::MessageDialog($self, "$model->{tag_from} >= $model->{tag_to}",
+        my $msg = Wx::MessageDialog->new($self, "$model->{tag_from} >= $model->{tag_to}",
                 'CVS log', wxICON_ERROR|wxOK, wxDefaultPosition);
         $msg->ShowModal();
         return;
@@ -658,11 +658,11 @@ sub OnAudit {
     if (Wx::wxMSW()) {
         use Cwd;
         my $url = 'file://' . cwd() . '/' . $html;
-        my $ie = new MyIEFrame($title, $url);
+        my $ie = MyIEFrame->new($title, $url);
         $ie->Show(1);
     }
     else {
-        my $browser = new MyHtmlFrame($title, $html);
+        my $browser = MyHtmlFrame->new($title, $html);
         $browser->Show(1);
     }
 }
@@ -822,7 +822,7 @@ my $style = q{
       span.modified { font-weight: bold }
 };
 
-    my $template = new HTML::Template(
+    my $template = HTML::Template->new(
             loop_context_vars   => 1,
             scalarref           => \$html,
     );
@@ -1007,10 +1007,10 @@ sub OnInit {
 
     Wx::InitAllImageHandlers();
 
-    my $model = new MyModel();
+    my $model = MyModel->new();
 
     # create a new frame
-    my $frame = new MyFrame($model, undef, -1, "CVS log - $main::title");
+    my $frame = MyFrame->new($model, undef, -1, "CVS log - $main::title");
     # set as top frame
     $self->SetTopWindow($frame);
 

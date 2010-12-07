@@ -3,7 +3,7 @@ use warnings;
 
 package CVS::Metrics;
 
-our $VERSION = '0.17';
+our $VERSION = '0.18';
 
 use File::Basename;
 use POSIX qw(mktime);
@@ -508,7 +508,7 @@ sub CvsLog {
         }
     }
 
-    my $parser = new CVS::Metrics::Parser();
+    my $parser = CVS::Metrics::Parser->new();
     if ($parser) {
         $cvs_log = $parser->parse($hash{stream});
         if ($hash{use_cache}) {
@@ -547,7 +547,7 @@ L<cvs_activity>, L<cvs_energy>, L<cvs_tklog>, L<cvs_wxlog>, L<cvs_current>
 
 =head1 COPYRIGHT
 
-(c) 2003-2007 Francois PERRAD, France. All rights reserved.
+(c) 2003-2010 Francois PERRAD, France. All rights reserved.
 
 This library is distributed under the terms of the Artistic Licence.
 

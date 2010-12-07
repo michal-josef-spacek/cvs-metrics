@@ -148,7 +148,7 @@ cvs_current, cvs_activity, cvs_energy, cvs_tklog, cvs_wxlog
 
 =head1 COPYRIGHT
 
-(c) 2005-2007 Francois PERRAD, France. All rights reserved.
+(c) 2005-2010 Francois PERRAD, France. All rights reserved.
 
 This library is distributed under the terms of the Artistic Licence.
 
@@ -336,7 +336,7 @@ my $style = q{
       th.tag         { writing-mode: tb-rl } /* CSS-3 */
 };
 
-    my $template = new HTML::Template(
+    my $template = HTML::Template->new(
             loop_context_vars   => 1,
             scalarref           => \$html,
     );
@@ -488,7 +488,7 @@ my $style = q{
       h2    { color: red }
 };
 
-    my $template = new HTML::Template(
+    my $template = HTML::Template->new(
             loop_context_vars   => 1,
             scalarref           => \$html,
     );

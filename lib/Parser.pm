@@ -3,7 +3,7 @@ package CVS::Metrics::Parser;
 use strict;
 use warnings;
 
-our $VERSION = '0.16';
+our $VERSION = '0.18';
 
 use Parse::RecDescent;
 
@@ -132,7 +132,7 @@ sub new {
         EOL: /\n/
     };
     $Parse::RecDescent::skip = '[ \t]*';
-    $self->{parser} = new Parse::RecDescent($grammar);
+    $self->{parser} = Parse::RecDescent->new($grammar);
     return undef unless (defined $self->{parser});
     return $self;
 }
