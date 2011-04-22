@@ -70,7 +70,7 @@ if ($opts{S}) {
     $start_date = $opts{S};
 }
 else {
-    $start_date = '2006/01/01' unless (defined $start_date);
+    $start_date = '2011/01/01' unless (defined $start_date);
 }
 
 my $output = $opts{o};
@@ -160,7 +160,7 @@ in the current directory. The file could contains the following variables :
 
  $flg_dead = 1;     # or 0
 
- $start_date = "2006/01/01";
+ $start_date = "2011/01/01";
 
 =head1 SEE ALSO
 
@@ -168,7 +168,7 @@ cvs_activity, cvs_energy, cvs_wxlog, cvs_current
 
 =head1 COPYRIGHT
 
-(c) 2003-2010 Francois PERRAD, France. All rights reserved.
+(c) 2003-2011 Francois PERRAD, France. All rights reserved.
 
 This library is distributed under the terms of the Artistic Licence.
 

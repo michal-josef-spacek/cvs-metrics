@@ -29,7 +29,7 @@ unless (defined $regex_tag) {
 }
 
 unless (defined $start_date) {
-    $start_date = '2006/01/01';
+    $start_date = '2011/01/01';
 }
 
 my $cvs = FindCvs();
@@ -72,7 +72,7 @@ in the current directory. The file could contains the following variables :
 
  @dirs = ( "abc", "def" , "def/hij" );
 
- $start_date = "2006/01/01";
+ $start_date = "2011/01/01";
 
 =head1 SEE ALSO
 
@@ -80,7 +80,7 @@ cvs_activity, cvs_energy, cvs_tklog, cvs_wxlog, cvs_current
 
 =head1 COPYRIGHT
 
-(c) 2004-2010 Francois PERRAD, France. All rights reserved.
+(c) 2004-2011 Francois PERRAD, France. All rights reserved.
 
 This library is distributed under the terms of the Artistic Licence.
 
