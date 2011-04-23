@@ -3,8 +3,6 @@ package CVS::Metrics;
 use strict;
 use warnings;
 
-our $VERSION = '0.18';
-
 use GD;
 use CVS::Metrics::TaggedChart;
 
