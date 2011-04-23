@@ -1,5 +1,8 @@
 Revision history for Perl extension CVS::Metrics.
 
+0.19
+	- handle 'commitid' (thanks to Michal Spacek)
+
 0.18  Tue Dec  7 10:30:00 2010
 	- TaggedChart: add a style 'up' (for text direction)
 

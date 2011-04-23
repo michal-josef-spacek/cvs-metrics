@@ -3,7 +3,7 @@ package CVS::Metrics::Parser;
 use strict;
 use warnings;
 
-our $VERSION = '0.18';
+our $VERSION = '0.19';
 
 use Parse::RecDescent;
 
@@ -87,7 +87,7 @@ sub new {
 
         imported: /(Imported|\.)/ /(.*)/ EOL
 
-        Revision: /[-]+\n/ id date author state line(?) EOL branches(?) EOL(s?) message(s?)
+        Revision: /[-]+\n/ id date author state line(?) commitid(?) EOL branches(?) EOL(s?) message(s?)
                 {
                     [
                         $item[2],
@@ -97,8 +97,9 @@ sub new {
                                 'state'     => $item[5],
 #                               'line_add'  => ${$item[6]}[0],
 #                               'line_del'  => ${$item[6]}[1],
-                                'branches'  => ${$item[8]}[0],
-                                'message'   => join "\n", @{$item[10]},
+#                                'commitid'  => $item[7],
+                                'branches'  => ${$item[9]}[0],
+                                'message'   => join "\n", @{$item[11]},
                         }
                     ];
                 }
@@ -115,8 +116,11 @@ sub new {
         state: 'state:' /[^;]+/ SEMICOL
                 { $item[2]; }
 
-        line: 'lines:' /[-+]?[0-9]+/ /[-+]?[0-9]+/
+        line: 'lines:' /[-+]?[0-9]+/ /[-+]?[0-9]+/ SEMICOL(?)
                 { [ $item[2] , $item[3] ]; }
+
+        commitid: 'commitid:' /[^;]+/ SEMICOL
+                { $item[2]; }
 
         branches: 'branches:' Rev(s) EOL
                 { $item[2]; }
