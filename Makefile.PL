@@ -33,5 +33,10 @@ WriteMakefile(
         'COMPRESS'      => 'gzip',
         'SUFFIX'        => '.gz',
     },
+    'test'          => {
+        'TESTS' => 't/CVS::Metrics/*.t '.
+            't/CVS::Metrics::Parser/*.t '.
+            't/CVS::Metrics::TaggedChart/*.t',
+    },
 );
 
