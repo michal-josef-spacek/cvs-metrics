@@ -173,3 +173,36 @@ sub parse {
 
 1;
 
+__END__
+
+=pod
+
+=head1 NAME
+
+CVS::Metrics::Parser - Parser for CVS log.
+
+=head1 SYNOPSIS
+
+ use CVS::Metrics::Parser;
+ my $parser = CVS::Metrics::Parser->new;
+ my $cvs_metrics = $parser->parse($cvs_log_file);
+
+=head1 METHODS
+
+=over 8
+
+=item C<new()>
+
+ Constructor.
+
+=item C<parse($cvs_log_file)>
+
+ Method for CVS log parsing.
+
+=back
+
+=head1 VERSION
+
+0.19
+
+=cut
