@@ -114,3 +114,31 @@ sub _createTag {
 
 1;
 
+__END__
+
+=pod
+
+=head1 NAME
+
+CVS::Metrics::TaggedChart - TODO
+
+=head1 SYNOPSIS
+
+ use CVS::Metrics::TaggedChart;
+ TODO
+
+=head1 METHODS
+
+=over 8
+
+=item C<setTag($tag_ar)>
+
+ TODO
+
+=back
+
+=head1 VERSION
+
+0.18
+
+=cut
