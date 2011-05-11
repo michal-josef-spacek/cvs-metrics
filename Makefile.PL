@@ -35,6 +35,7 @@ WriteMakefile(
     },
     'test'          => {
         'TESTS' => 't/CVS::Metrics/*.t '.
+            't/CVS::Metrics::Graph/*.t '.
             't/CVS::Metrics::Parser/*.t '.
             't/CVS::Metrics::TaggedChart/*.t',
     },
