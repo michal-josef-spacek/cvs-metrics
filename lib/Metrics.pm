@@ -536,10 +536,73 @@ sub CvsLog {
 
 __END__
 
+=pod
 
 =head1 NAME
 
 CVS::Metrics - Utilities for process B<cvs log>
+
+=head1 SYNOPSIS
+
+ TODO
+
+=head1 SUBROUTINES
+
+=over 8
+
+=item C<CvsLog()>
+
+ TODO
+
+=item C<cmp_rev()>
+
+ TODO
+
+=item C<getBranch()>
+
+ TODO
+
+=item C<getBranchname()>
+
+ TODO
+
+=item C<getDirBranch()>
+
+ TODO
+
+=item C<getDirEvolution()>
+
+ TODO
+
+=item C<getEvolution()>
+
+ TODO
+
+=item C<getRevByTag()>
+
+ TODO
+
+=item C<getTagname()>
+
+ TODO
+
+=item C<getTimedEvolution()>
+
+ TODO
+
+=item C<getTimedTag()>
+
+ TODO
+
+=item C<insertHead($cvs_log)>
+
+ TODO
+
+=item C<is_ancestor()>
+
+ TODO
+
+=back
 
 =head1 SEE ALSO
 
