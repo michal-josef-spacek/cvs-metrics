@@ -1,10 +1,12 @@
-package CVS::Metrics;
+package CVS::Metrics::Graph;
 
 use strict;
 use warnings;
 
 use GD;
 use CVS::Metrics::TaggedChart;
+
+our $VERSION = 0.19;
 
 sub EnergyGD {
     my $cvs_log = shift;
@@ -161,3 +163,38 @@ sub ActivityGD {
 
 1;
 
+__END__
+
+=pod
+
+=head1 NAME
+
+CVS::Metrics::Graph - TODO
+
+=head1 SYNOPSIS
+
+ TODO
+
+=head1 METHODS
+
+=over 8
+
+=item C<EnergyGD($tags, $path, $title, $width, $height, $tag_from, $tag_to)>
+
+ TODO
+
+=item C<EnergyCv($tags, $path, $title, $width, $height, $toplevel)>
+
+ TODO
+
+=item C<ActivityGD($path, $title, $start_date, $width, $height, $date_from, $date_to)>
+
+ TODO
+
+=back
+
+=head1 VERSION
+
+0.19
+
+=cut
