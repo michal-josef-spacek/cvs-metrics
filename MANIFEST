@@ -4,7 +4,6 @@ MANIFEST
 lib/Metrics.pm
 lib/Parser.pm
 lib/Graph.pm
-lib/TaggedChart.pm
 bin/cvs_activity
 bin/cvs_energy
 bin/cvs_tklog
