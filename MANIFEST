@@ -13,7 +13,6 @@ lib/Parser.pm
 lib/TaggedChart.pm
 Makefile.PL
 MANIFEST			This list of files
-META.yml
 README
 t/CVS::Metrics/00-use.t
 t/CVS::Metrics/01-version.t

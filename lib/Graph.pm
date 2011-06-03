@@ -4,7 +4,7 @@ use strict;
 use warnings;
 
 use GD;
-use CVS::Metrics::TaggedChart;
+use Chart::Plot::Canvas::Tagged;
 
 our $VERSION = 0.19;
 
@@ -13,7 +13,7 @@ sub EnergyGD {
     my ($tags, $path, $title, $width, $height, $tag_from, $tag_to) = @_;
 
     my $data = $cvs_log->_Energy($tags, $path);
-    my $img = CVS::Metrics::TaggedChart->new($width, $height);
+    my $img = Chart::Plot::Canvas::Tagged->new($width, $height);
     if (defined $tag_from and defined $tag_to) {
         my @tags2 = @{$tags};
         my @data_pre;
@@ -72,7 +72,7 @@ sub EnergyCv {
     my ($tags, $path, $title, $width, $height, $toplevel) = @_;
 
     my $data = $cvs_log->_Energy($tags, $path);
-    my $img = CVS::Metrics::TaggedChart->new($width, $height);
+    my $img = Chart::Plot::Canvas::Tagged->new($width, $height);
     $img->setData($data, 'blue up');
     $img->setTag($tags);
     $img->setGraphOptions(

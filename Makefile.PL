@@ -6,7 +6,7 @@ WriteMakefile(
     'VERSION_FROM'  => 'lib/Metrics.pm',
     'ABSTRACT'      => 'Utilities for process cvs log',
     'PREREQ_PM'     => {
-        'Chart::Plot::Canvas'   => 0,
+        'Chart::Plot::Canvas'   => 0.04,
         'HTML::Template'        => 0,
         'GD'                    => 0,
         'GD::Graph'             => 0,
@@ -16,7 +16,6 @@ WriteMakefile(
         'lib/Metrics.pm'        => '$(INST_LIBDIR)/Metrics.pm',
         'lib/Parser.pm'         => '$(INST_LIBDIR)/Metrics/Parser.pm',
         'lib/Graph.pm'          => '$(INST_LIBDIR)/Metrics/Graph.pm',
-        'lib/TaggedChart.pm'    => '$(INST_LIBDIR)/Metrics/TaggedChart.pm',
     },
     'EXE_FILES'     => [
         'bin/cvs_activity',
